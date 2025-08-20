@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadoras Shark</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(33, 52, 53, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(70, 104, 91, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(100, 138, 100, 0.08) 0%, transparent 50%),
+                linear-gradient(135deg, #213435 0%, #46685B 50%, #213435 100%);
+            min-height: 100vh;
+            color: #E1E3AC;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle, rgba(166, 185, 133, 0.05) 2px, transparent 2px),
+                radial-gradient(circle, rgba(100, 138, 100, 0.03) 1px, transparent 1px);
+            background-size: 120px 120px, 60px 60px;
+            animation: floatMoney 25s infinite linear;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        @keyframes floatMoney {
+            0% {
+                transform: translateX(-50%) translateY(-50%) rotate(0deg);
+            }
+            100% {
+                transform: translateX(-48%) translateY(-48%) rotate(360deg);
+            }
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: #A6B985;
+            margin-bottom: 30px;
+            text-shadow: 0 0 20px rgba(166, 185, 133, 0.5);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #A6B985, #648A64, #46685B);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #213435, #46685B);
+            border: 2px solid #A6B985;
+            border-radius: 50px;
+            padding: 5px;
+            box-shadow: 0 10px 30px rgba(166, 185, 133, 0.3), inset 0 1px 0 rgba(166, 185, 133, 0.1);
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 8px 15px;
+            background: transparent;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #A6B985;
+            font-weight: bold;
+            margin: 2px;
+            text-shadow: 0 0 10px rgba(166, 185, 133, 0.3);
+            font-size: 14px;
+        }
+        
+        .tab.active {
+            background: linear-gradient(45deg, #A6B985, #648A64);
+            color: #213435;
+            box-shadow: 0 5px 15px rgba(166, 185, 133, 0.4);
+            text-shadow: none;
+        }
+        
+        .calculator-section {
+            display: none;
+        }
+        
+        .calculator-section.active {
+            display: block;
+        }
+        
+        .calculator-card {
+            background: linear-gradient(135deg, #213435, #46685B);
+            border: 2px solid #A6B985;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(166, 185, 133, 0.2), inset 0 1px 0 rgba(166, 185, 133, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .calculator-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(166, 185, 133, 0.3), 0 0 20px rgba(166, 185, 133, 0.2);
+        }
+        
+        .card-header {
+            padding: 20px;
+            color: #213435;
+            font-weight: bold;
+            text-align: center;
+            background: linear-gradient(45deg, #A6B985, #648A64);
+        }
+        
+        .card-body {
+            padding: 25px;
+            background: #213435;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #A6B985;
+            text-shadow: 0 0 5px rgba(166, 185, 133, 0.3);
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #46685B;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #46685B;
+            color: #E1E3AC;
+        }
+        
+        .input-group input:focus {
+            border-color: #A6B985;
+            outline: none;
+            box-shadow: 0 0 15px rgba(166, 185, 133, 0.4);
+            background: #213435;
+        }
+        
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .btn-calculate {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #A6B985, #648A64);
+            color: #213435;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(166, 185, 133, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .btn-calculate:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(166, 185, 133, 0.5);
+            background: linear-gradient(45deg, #648A64, #A6B985);
+        }
+        
+        .results {
+            background: linear-gradient(135deg, #213435, #46685B);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid #A6B985;
+            box-shadow: 0 10px 20px rgba(166, 185, 133, 0.2), inset 0 1px 0 rgba(166, 185, 133, 0.1);
+        }
+        
+        .results h4 {
+            color: #A6B985;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px rgba(166, 185, 133, 0.3);
+        }
+        
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #46685B;
+            color: #E1E3AC;
+        }
+        
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .result-value {
+            font-weight: bold;
+            color: #A6B985;
+            text-shadow: 0 0 5px rgba(166, 185, 133, 0.3);
+        }
+        
+        .status-ruim {
+            color: #ff6b6b !important;
+            text-shadow: 0 0 8px rgba(255, 107, 107, 0.4) !important;
+        }
+        
+        .status-ruim .emoji-pulse {
+            animation: pulse-red-emoji 1.5s infinite;
+            display: inline-block;
+        }
+        
+        .status-aceitavel {
+            color: #ffa726 !important;
+            text-shadow: 0 0 8px rgba(255, 167, 38, 0.4) !important;
+        }
+        
+        .status-aceitavel .emoji-pulse {
+            animation: pulse-yellow-emoji 2s infinite;
+            display: inline-block;
+        }
+        
+        .status-muito-bom {
+            color: #4ecdc4 !important;
+            text-shadow: 0 0 8px rgba(78, 205, 196, 0.4) !important;
+        }
+        
+        .status-muito-bom .emoji-pulse {
+            animation: pulse-green-emoji 1.2s infinite;
+            display: inline-block;
+        }
+        
+        @keyframes pulse-red-emoji {
+            0% { 
+                transform: scale(1);
+                filter: brightness(1);
+            }
+            50% { 
+                transform: scale(1.3);
+                filter: brightness(1.5) drop-shadow(0 0 10px rgba(255, 107, 107, 0.8));
+            }
+            100% { 
+                transform: scale(1);
+                filter: brightness(1);
+            }
+        }
+        
+        @keyframes pulse-yellow-emoji {
+            0% { 
+                transform: scale(1) rotate(0deg);
+                filter: brightness(1);
+            }
+            25% { 
+                transform: scale(1.1) rotate(-5deg);
+                filter: brightness(1.3);
+            }
+            50% { 
+                transform: scale(1.2) rotate(0deg);
+                filter: brightness(1.5) drop-shadow(0 0 8px rgba(255, 167, 38, 0.6));
+            }
+            75% { 
+                transform: scale(1.1) rotate(5deg);
+                filter: brightness(1.3);
+            }
+            100% { 
+                transform: scale(1) rotate(0deg);
+                filter: brightness(1);
+            }
+        }
+        
+        @keyframes pulse-green-emoji {
+            0% { 
+                transform: scale(1);
+                filter: brightness(1);
+            }
+            30% { 
+                transform: scale(1.4);
+                filter: brightness(1.8) drop-shadow(0 0 15px rgba(78, 205, 196, 1));
+            }
+            60% { 
+                transform: scale(1.2);
+                filter: brightness(1.4);
+            }
+            100% { 
+                transform: scale(1);
+                filter: brightness(1);
+            }
+        }
+        
+        @keyframes pulse-red {
+            0%, 100% { text-shadow: 0 0 8px rgba(255, 107, 107, 0.4); }
+            50% { text-shadow: 0 0 15px rgba(255, 107, 107, 0.7); }
+        }
+        
+        @keyframes pulse-green {
+            0%, 100% { text-shadow: 0 0 8px rgba(78, 205, 196, 0.4); }
+            50% { text-shadow: 0 0 15px rgba(78, 205, 196, 0.7); }
+        }
+        
+        .highlight {
+            background: linear-gradient(45deg, #A6B985, #648A64);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #46685B;
+            color: #213435;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(166, 185, 133, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Calculadoras Shark 100% Green</h1>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="mostrarCalculadora('shark-completa')">🦈 Aposta Segura</button>
+            <button class="tab" onclick="mostrarCalculadora('freebet-lay')">📊 Freebet Lay</button>
+            <button class="tab" onclick="mostrarCalculadora('lay-tradicional')">⚡ Lay Tradicional</button>
+            <button class="tab" onclick="mostrarCalculadora('odd-aumento')">📈 Odd Aumento %</button>
+        </div>
+        
+        <!-- SHARK COMPLETA -->
+        <div id="shark-completa" class="calculator-section active">
+            <div class="calculator-card">
+                <div class="card-header">
+                    <h2>🦈 Aposta Segura</h2>
+                </div>
+                <div class="card-body">
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>ENTRADA 1 - ODD</label>
+                            <input type="number" id="sc-odd1" value="3.40" step="0.01">
+                        </div>
+                        <div class="input-group">
+                            <label>ENTRADA 1 - APOSTA (R$)</label>
+                            <input type="number" id="sc-aposta1" value="25.00" step="0.01">
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>ENTRADA 2 LAY - ODD</label>
+                            <input type="number" id="sc-odd2" value="3.95" step="0.01">
+                        </div>
+                        <div class="input-group">
+                            <label>COMISSÃO (%)</label>
+                            <input type="number" id="sc-comissao" value="4.50" step="0.01">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>FREEBET (R$)</label>
+                        <input type="number" id="sc-freebet" value="25.00" step="0.01">
+                    </div>
+                    <button class="btn-calculate" onclick="calcularSharkCompleta()">🚀 Calcular</button>
+                    <div id="sc-results" class="results" style="display:none;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap;">
+                            <div style="flex: 1; margin-right: 20px; min-width: 300px;">
+                                <h4>📈 Resultados:</h4>
+                                <div class="result-item">
+                                    <span>ENTRADA 2 LAY - APOSTAR →</span>
+                                    <span class="result-value" id="sc-apostar2">R$ 0,00</span>
+                                </div>
+                                <div class="result-item">
+                                    <span>SALDO NECESSARIO (RESPONSABILIDADE)</span>
+                                    <span class="result-value" id="sc-saldo-necessario">R$ 0,00</span>
+                                </div>
+                                <div class="result-item">
+                                    <span>SE BATER NA CASA</span>
+                                    <span class="result-value" id="sc-casa">R$ 0,00</span>
+                                </div>
+                                <div class="result-item">
+                                    <span>SE BATER NA EXCHANGE (PERCA)</span>
+                                    <span class="result-value" id="sc-exchange">R$ 0,00</span>
+                                </div>
+                                <div class="result-item">
+                                    <span>LUCRO AO GIRAR A FREEBET</span>
+                                    <span class="result-value" id="sc-lucro-freebet">R$ 0,00</span>
+                                </div>
+                            </div>
+                            <div style="flex: 0 0 200px; text-align: center; min-width: 200px;">
+                                <div style="position: relative; width: 150px; height: 150px; margin: 0 auto;">
+                                    <canvas id="sc-chart" width="150" height="150" style="border-radius: 50%;"></canvas>
+                                </div>
+                                <div style="margin-top: 15px; display: flex; justify-content: center; gap: 15px; font-size: 12px;">
+                                    <div><span style="color: #A6B985; font-size: 16px;">●</span> LUCRO DIRETO</div>
+                                    <div><span style="color: #648A64; font-size: 16px;">●</span> GIRAR FREEBET</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- FREEBET LAY -->
+        <div id="freebet-lay" class="calculator-section">
+            <div class="calculator-card">
+                <div class="card-header">
+                    <h2>📊 Freebet Lay Freebet</h2>
+                </div>
+                <div class="card-body">
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>ODD Casa</label>
+                            <input type="number" id="fl-odd-casa" value="4.00" step="0.01">
+                        </div>
+                        <div class="input-group">
+                            <label>ODD Lay Betbra</label>
+                            <input type="number" id="fl-odd-lay" value="4.60" step="0.01">
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Valor da Freebet (R$)</label>
+                            <input type="number" id="fl-valor-freebet" value="55.00" step="0.01">
+                        </div>
+                        <div class="input-group">
+                            <label>Comissão Exchange (%)</label>
+                            <input type="number" id="fl-comissao" value="4.50" step="0.01">
+                        </div>
+                    </div>
+                    <button class="btn-calculate" onclick="calcularFreebetLay()">🚀 Calcular</button>
+                    <div id="fl-results" class="results" style="display:none;">
+                        <h4>📈 Resultados:</h4>
+                        <div class="result-item">
+                            <span>Valor para apostar:</span>
+                            <span class="result-value" id="fl-valor-apostar">R$ 0,00</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Responsabilidade:</span>
+                            <span class="result-value" id="fl-responsabilidade">R$ 0,00</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Lucro/Prejuízo:</span>
+                            <span class="result-value" id="fl-lucro">R$ 0,00</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Percentual:</span>
+                            <span class="result-value" id="fl-percentual">0,00%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- LAY TRADICIONAL -->
+        <div id="lay-tradicional" class="calculator-section">
+            <div class="calculator-card">
+                <div class="card-header">
+                    <h2>⚡ Calculadora Lay sem Freebet</h2>
+                </div>
+                <div class="card-body">
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>ODD Casa</label>
+                            <input type="number" id="lt-odd-casa" value="3.75" step="0.01">
+                        </div>
+                        <div class="input-group">
+                            <label>ODD Lay Betbra</label>
+                            <input type="number" id="lt-odd-lay" value="3.90" step="0.01">
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Aposta a favor (R$)</label>
+                            <input type="number" id="lt-aposta" value="25.00" step="0.01">
+                        </div>
+                        <div class="input-group">
+                            <label>Comissão (%)</label>
+                            <input type="number" id="lt-comissao" value="4.50" step="0.01">
+                        </div>
+                    </div>
+                    <button class="btn-calculate" onclick="calcularLayTradicional()">🚀 Calcular</button>
+                    <div id="lt-results" class="results" style="display:none;">
+                        <h4>📈 Resultados:</h4>
+                        <div class="result-item">
+                            <span>Valor para apostar:</span>
+                            <span class="result-value" id="lt-valor-apostar">R$ 0,00</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Responsabilidade:</span>
+                            <span class="result-value" id="lt-responsabilidade">R$ 0,00</span>
+                        </div>
+                        <div class="result-item">
+                            <span>Lucro/Prejuízo:</span>
+                            <span class="result-value" id="lt-lucro">R$ 0,00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ODD AUMENTO -->
+        <div id="odd-aumento" class="calculator-section">
+            <div class="calculator-card">
+                <div class="card-header">
+                    <h2>📈 Descobrir Odd Aumento %</h2>
+                </div>
+                <div class="card-body">
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>ODD Normal</label>
+                            <input type="number" id="oa-odd-normal" value="6.80" step="0.01">
+                        </div>
+                        <div class="input-group">
+                            <label>% Aumento</label>
+                            <input type="number" id="oa-aumento" value="25.00" step="0.01">
+                        </div>
+                    </div>
+                    <button class="btn-calculate" onclick="calcularOddAumento()">🚀 Calcular</button>
+                    <div id="oa-results" class="results" style="display:none;">
+                        <h4>📈 Resultado:</h4>
+                        <div class="result-item">
+                            <span>ODD com Aumento:</span>
+                            <span class="result-value" id="oa-odd-final">0,00</span>
+                        </div>
+                        <div class="highlight">
+                            <strong>💡 Dica:</strong> Com <span id="oa-percent-display">0%</span> de aumento, sua odd de <span id="oa-odd-display">0</span> vira <span id="oa-final-display">0</span>!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function mostrarCalculadora(calculadoraId) {
+            // Esconder todas as seções
+            const secoes = document.querySelectorAll('.calculator-section');
+            secoes.forEach(secao => {
+                secao.classList.remove('active');
+            });
+            
+            // Remover classe ativa das abas
+            const abas = document.querySelectorAll('.tab');
+            abas.forEach(aba => {
+                aba.classList.remove('active');
+            });
+            
+            // Mostrar seção selecionada e ativar aba
+            document.getElementById(calculadoraId).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        function formatarMoeda(valor) {
+            return 'R$ ' + parseFloat(valor).toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+        
+        function formatarPercentual(valor) {
+            return parseFloat(valor).toFixed(2) + '%';
+        }
+        
+        function calcularSharkCompleta() {
+            const F13 = parseFloat(document.getElementById('sc-odd1').value); // ODD ENTRADA 1
+            const H13 = parseFloat(document.getElementById('sc-aposta1').value); // APOSTA ENTRADA 1
+            const F14 = parseFloat(document.getElementById('sc-odd2').value); // ODD ENTRADA 2 LAY
+            const L21 = parseFloat(document.getElementById('sc-comissao').value) / 100; // COMISSÃO
+            const F17 = parseFloat(document.getElementById('sc-freebet').value); // FREEBET
+            
+            // Fórmulas exatas do Excel:
+            
+            // M11 = SOMA(F17*70%)
+            const M11 = F17 * 0.7;
+            
+            // H15 = (H13*(F13-1)+H13-(F17*0,7))/(F14-L21)
+            const H15 = (H13 * (F13 - 1) + H13 - (F17 * 0.7)) / (F14 - L21);
+            
+            // I12 = SOMA(L21*H15)
+            const I12 = L21 * H15;
+            
+            // H16 = SOMA(F14*H15)-H15 (SALDO NECESSARIO)
+            const H16 = (F14 * H15) - H15;
+            
+            // H19 = SOMA(F13*H13-H13-H16)
+            const H19 = (F13 * H13) - H13 - H16;
+            
+            // H20 = SOMA(H15-H13)-I12
+            const H20 = (H15 - H13) - I12;
+            
+            // H21 = SOMA(H15-H13)+M11-I12 (LUCRO AO GIRAR A FREEBET)
+            const H21 = (H15 - H13) + M11 - I12;
+            
+            // Mapear para os resultados corretos:
+            document.getElementById('sc-apostar2').textContent = formatarMoeda(H15); // ENTRADA 2 LAY - APOSTAR
+            document.getElementById('sc-saldo-necessario').textContent = formatarMoeda(H16); // SALDO NECESSARIO (RESPONSABILIDADE)
+            document.getElementById('sc-casa').textContent = formatarMoeda(H19); // SE BATER NA CASA
+            document.getElementById('sc-exchange').textContent = formatarMoeda(H20); // SE BATER NA EXCHANGE
+            document.getElementById('sc-lucro-freebet').textContent = formatarMoeda(H21); // LUCRO AO GIRAR A FREEBET
+            
+            // Desenhar gráfico
+            desenharGraficoPizza(H19, H21);
+            
+            document.getElementById('sc-results').style.display = 'block';
+        }
+        
+        function desenharGraficoPizza(lucroDireto, lucroFreebet) {
+            const canvas = document.getElementById('sc-chart');
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 60;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const total = Math.abs(lucroDireto) + Math.abs(lucroFreebet);
+            if (total === 0) return;
+            
+            const angulo1 = (Math.abs(lucroDireto) / total) * 2 * Math.PI;
+            const angulo2 = (Math.abs(lucroFreebet) / total) * 2 * Math.PI;
+            
+            // Fatia 1 - Lucro Direto
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, 0, angulo1);
+            ctx.closePath();
+            ctx.fillStyle = '#A6B985';
+            ctx.fill();
+            
+            // Fatia 2 - Girar Freebet
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, angulo1, angulo1 + angulo2);
+            ctx.closePath();
+            ctx.fillStyle = '#648A64';
+            ctx.fill();
+            
+            // Borda
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.strokeStyle = '#A6B985';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        function calcularFreebetLay() {
+            const oddCasa = parseFloat(document.getElementById('fl-odd-casa').value);
+            const oddLay = parseFloat(document.getElementById('fl-odd-lay').value);
+            const valorFreebet = parseFloat(document.getElementById('fl-valor-freebet').value);
+            const comissao = parseFloat(document.getElementById('fl-comissao').value) / 100;
+            
+            const valorApostar = (valorFreebet * (oddCasa - 1)) / (oddLay - comissao);
+            const responsabilidade = valorApostar * (oddLay - 1);
+            const lucro = (valorFreebet * (oddCasa - 1)) - responsabilidade;
+            const percentual = (lucro / valorFreebet) * 100;
+            
+            document.getElementById('fl-valor-apostar').textContent = formatarMoeda(valorApostar);
+            document.getElementById('fl-responsabilidade').textContent = formatarMoeda(responsabilidade);
+            document.getElementById('fl-lucro').textContent = formatarMoeda(lucro);
+            
+            // Sistema intuitivo para o percentual
+            let percentualDisplay = '';
+            let statusClass = '';
+            
+            if (percentual < 60) {
+                percentualDisplay = `<span class="emoji-pulse">🔴</span> ${formatarPercentual(percentual)} - RUIM`;
+                statusClass = 'status-ruim';
+            } else if (percentual >= 60 && percentual <= 70) {
+                percentualDisplay = `<span class="emoji-pulse">🟡</span> ${formatarPercentual(percentual)} - ACEITÁVEL`;
+                statusClass = 'status-aceitavel';
+            } else {
+                percentualDisplay = `<span class="emoji-pulse">🟢</span> ${formatarPercentual(percentual)} - MUITO BOM`;
+                statusClass = 'status-muito-bom';
+            }
+            
+            const percentualElement = document.getElementById('fl-percentual');
+            percentualElement.innerHTML = percentualDisplay;
+            percentualElement.className = `result-value ${statusClass}`;
+            
+            document.getElementById('fl-results').style.display = 'block';
+        }
+        
+        function calcularLayTradicional() {
+            const oddCasa = parseFloat(document.getElementById('lt-odd-casa').value);
+            const oddLay = parseFloat(document.getElementById('lt-odd-lay').value);
+            const aposta = parseFloat(document.getElementById('lt-aposta').value);
+            const comissao = parseFloat(document.getElementById('lt-comissao').value) / 100;
+            
+            const valorApostar = (aposta * oddCasa) / (oddLay - comissao);
+            const responsabilidade = valorApostar * (oddLay - 1);
+            const lucro = (aposta * (oddCasa - 1)) - responsabilidade;
+            
+            document.getElementById('lt-valor-apostar').textContent = formatarMoeda(valorApostar);
+            document.getElementById('lt-responsabilidade').textContent = formatarMoeda(responsabilidade);
+            document.getElementById('lt-lucro').textContent = formatarMoeda(lucro);
+            
+            document.getElementById('lt-results').style.display = 'block';
+        }
+        
+        function calcularOddAumento() {
+            const oddNormal = parseFloat(document.getElementById('oa-odd-normal').value);
+            const aumento = parseFloat(document.getElementById('oa-aumento').value);
+            
+            // Fórmula do Excel: =((100 * C31 - 100) + (100 * C31 - 100) * C32 + 100) / 100
+            const percentualDecimal = aumento / 100;
+            const oddFinal = ((100 * oddNormal - 100) + (100 * oddNormal - 100) * percentualDecimal + 100) / 100;
+            
+            document.getElementById('oa-odd-final').textContent = oddFinal.toFixed(3);
+            document.getElementById('oa-percent-display').textContent = aumento + '%';
+            document.getElementById('oa-odd-display').textContent = oddNormal;
+            document.getElementById('oa-final-display').textContent = oddFinal.toFixed(3);
+            
+            document.getElementById('oa-results').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

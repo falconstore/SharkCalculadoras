@@ -359,6 +359,145 @@
                 width: 200px;
                 text-align: center;
             }
+            
+            /* Ajustes específicos para resultados no mobile */
+            .results {
+                font-size: 14px;
+                padding: 15px;
+            }
+            
+            .result-item {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 10px 0;
+                text-align: left;
+            }
+            
+            .result-item span:first-child {
+                margin-bottom: 5px;
+                font-weight: bold;
+                color: #A6B985;
+            }
+            
+            .result-value {
+                font-size: 16px;
+                margin-left: 0;
+            }
+            
+            /* Ajustar layout do gráfico no mobile */
+            #sc-results > div {
+                flex-direction: column !important;
+            }
+            
+            #sc-results > div > div:first-child {
+                margin-right: 0 !important;
+                margin-bottom: 20px;
+            }
+            
+            #sc-results > div > div:last-child {
+                flex: none !important;
+                align-self: center;
+            }
+            
+            /* Reduzir tamanho do gráfico no mobile */
+            #sc-chart {
+                width: 120px !important;
+                height: 120px !important;
+            }
+            
+            /* Ajustar container do gráfico */
+            #sc-results > div > div:last-child > div:first-child {
+                width: 120px !important;
+                height: 120px !important;
+            }
+            
+            /* Melhorar legenda do gráfico no mobile */
+            #sc-results > div > div:last-child > div:last-child {
+                font-size: 11px;
+                gap: 10px !important;
+                flex-wrap: wrap;
+            }
+            
+            /* Ajustar inputs no mobile */
+            .input-group input {
+                font-size: 16px; /* Previne zoom no iOS */
+                padding: 14px;
+            }
+            
+            .input-group label {
+                font-size: 14px;
+            }
+            
+            /* Reduzir padding dos cards no mobile */
+            .card-body {
+                padding: 20px 15px;
+            }
+            
+            .card-header {
+                padding: 15px;
+            }
+            
+            .card-header h2 {
+                font-size: 1.3rem;
+            }
+            
+            /* Melhorar botão de calcular no mobile */
+            .btn-calculate {
+                font-size: 14px;
+                padding: 12px;
+                margin: 15px 0;
+            }
+            
+            /* Ajustar highlight box no mobile */
+            .highlight {
+                padding: 12px;
+                font-size: 14px;
+                margin: 8px 0;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.6rem;
+            }
+            
+            .tabs {
+                padding: 3px;
+                border-radius: 25px;
+            }
+            
+            .tab {
+                width: 150px;
+                font-size: 12px;
+                padding: 6px 10px;
+            }
+            
+            .results {
+                font-size: 13px;
+                padding: 12px;
+            }
+            
+            .result-value {
+                font-size: 15px;
+            }
+            
+            .card-body {
+                padding: 15px 10px;
+            }
+            
+            .input-group {
+                margin-bottom: 15px;
+            }
+            
+            /* Garantir que textos longos quebrem adequadamente */
+            .result-item span {
+                word-break: break-word;
+                line-height: 1.3;
+            }
         }
     </style>
 </head>

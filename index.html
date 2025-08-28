@@ -18,7 +18,6 @@
 
 <script>
 (() => {
-  // ===== Utils =====
   const $ = (sel, root=document) => root.querySelector(sel);
   const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
@@ -26,11 +25,11 @@
     if (n === null || n === undefined) return NaN;
     const s = String(n).trim();
     if (s === '') return NaN;
-    const hasComma = s.includes(',');
-    const hasDot = s.includes('.');
+    const hasC = s.includes(',');
+    const hasD = s.includes('.');
     let t = s;
-    if (hasComma && !hasDot) t = s.replace(',', '.');            // 1,23 -> 1.23
-    else if (hasComma && hasDot) t = s.replace(/\./g,'').replace(',', '.'); // 1.234,56 -> 1234.56
+    if (hasC && !hasD) t = s.replace(',', '.');               
+    else if (hasC && hasD) t = s.replace(/\./g,'').replace(',', '.'); 
     const v = parseFloat(t);
     return Number.isFinite(v) ? v : NaN;
   }
@@ -67,38 +66,65 @@
   };
   const activeHouses = () => houses.slice(0, numHouses);
 
-  // ===== UI Sync helpers (sem re-render geral) =====
-  function setInputValue(id, value) {
-    const el = document.getElementById(id);
-    if (el && el.value !== value) el.value = value;
-  }
-  function updateHouseUI(idx) {
-    const h = houses[idx];
-    // Odd Final
-    const oddEl = document.getElementById(`finalOdd-${idx}`);
-    if (oddEl) oddEl.textContent = toFixed2(h.finalOdd || 0).replace('.', ',');
-    // Stake (apenas quando NÃO é override manual)
-    if (!(manualOverrides[idx] && manualOverrides[idx].stake)) {
-      setInputValue(`stake-${idx}`, h.stake || "");
-    }
-    // Responsabilidade (quando LAY e sem override)
-    if (h.lay && !(manualOverrides[idx] && manualOverrides[idx].responsibility)) {
-      setInputValue(`responsibility-${idx}`, h.responsibility || "");
-    }
-    // Odd text não mexemos enquanto o usuário digita
-  }
-  function updateAllHouseUIs() {
-    activeHouses().forEach((_, i) => updateHouseUI(i));
+  function calculateResults(active) {
+    let totalStake = 0;
+    const profits = new Array(active.length).fill(0);
+
+    active.forEach(h => {
+      const stake = parseFlex(h.stake) || 0;
+      const resp  = parseFlex(h.responsibility) || 0;
+      if (!h.freebet) totalStake += h.lay ? resp : stake;
+    });
+
+    active.forEach((h, idx) => {
+      const stake = parseFlex(h.stake) || 0;
+      const odd = h.finalOdd || 0;
+      const commission = h.commission || 0;
+
+      if (h.lay) {
+        const resp = parseFlex(h.responsibility) || 0;
+        profits[idx] = stake * (1 - commission/100) - (totalStake - resp);
+      } else if (h.freebet) {
+        const gross = stake * odd - totalStake;
+        const comm  = gross > 0 ? (commission/100) * gross : 0;
+        profits[idx] = gross - comm;
+      } else {
+        const effOdd = odd * (1 - commission/100);
+        profits[idx] = stake * effOdd - totalStake;
+      }
+    });
+
+    const minProfit = profits.length ? Math.min(...profits) : 0;
+    const denom = active.some(h => h.freebet)
+                  ? active.reduce((s,h)=>s+(h.freebet?(parseFlex(h.stake)||0):0),0) || 1
+                  : (active.reduce((s,h)=> s + (h.freebet?0 : (h.lay? (parseFlex(h.responsibility)||0) : (parseFlex(h.stake)||0))), 0) || 1);
+    const roi = (minProfit/denom)*100;
+
+    results = { profits, totalStake, roi };
   }
 
+  // ---- UI helpers ----
+  function updateCardComputed(idx) {
+    const h = houses[idx];
+    const oddEl = document.getElementById(`finalOdd-${idx}`);
+    if (oddEl) oddEl.textContent = toFixed2(h.finalOdd || 0).replace('.', ',');
+    if (h.lay && !(manualOverrides[idx] && manualOverrides[idx].responsibility)) {
+      const rEl = document.getElementById(`responsibility-${idx}`);
+      if (rEl) rEl.value = h.responsibility || "";
+    }
+    if (!(manualOverrides[idx] && manualOverrides[idx].stake)) {
+      const sEl = document.getElementById(`stake-${idx}`);
+      if (sEl) sEl.value = h.stake || "";
+    }
+  }
+  function updateAllHouseUIs(){ activeHouses().forEach((_,i)=>updateCardComputed(i)); }
+
   function updateResultsUI() {
-    // Topo
     $("#totalStake").textContent = fmtBRL(results.totalStake);
     const roiEl = $("#roi");
     roiEl.textContent = (results.roi >= 0 ? "+" : "") + results.roi.toFixed(2) + "%";
     roiEl.className = "text-lg font-bold font-mono " + (results.roi >= 0 ? "text-green-400" : "text-red-400");
 
-    // Resultados
     const active = activeHouses();
     const anyLay = active.some(h => h.lay);
     const headerCols = anyLay ? "grid-cols-5 gap-3" : "grid-cols-4 gap-3";
@@ -132,86 +158,15 @@
     $("#resultsRows").innerHTML = rowsHTML;
   }
 
-  function recalcAndUpdate(syncCards=true) {
-    calculateResults(activeHouses());
-    if (syncCards) updateAllHouseUIs();
-    updateResultsUI();
-  }
-
-  // ===== Cálculo =====
-  function calculateResults(active) {
-    let totalStake = 0;
-    let totalFreebetValue = 0;
-    const profits = new Array(active.length).fill(0);
-
-    active.forEach(h => {
-      const stake = parseFlex(h.stake) || 0;
-      const resp = parseFlex(h.responsibility) || 0;
-      if (h.freebet) totalFreebetValue += stake; else totalStake += h.lay ? resp : stake;
-    });
-
-    active.forEach((h, idx) => {
-      const stake = parseFlex(h.stake) || 0;
-      const odd = h.finalOdd || 0;
-      const commission = h.commission || 0;
-
-      if (h.lay) {
-        const resp = parseFlex(h.responsibility) || 0;
-        const profit = stake * (1 - commission / 100) - (totalStake - resp);
-        profits[idx] = profit;
-      } else if (h.freebet) {
-        const grossProfit = stake * odd - totalStake;
-        const comm = grossProfit > 0 ? (commission / 100) * grossProfit : 0;
-        profits[idx] = grossProfit - comm;
-      } else {
-        const effectiveOdd = odd * (1 - commission / 100);
-        const grossProfit = stake * effectiveOdd - totalStake;
-        profits[idx] = grossProfit;
-      }
-    });
-
-    const minProfit = profits.length ? Math.min(...profits) : 0;
-    const roi = (active.some(h => h.freebet) ? (minProfit / (active.reduce((s,h)=>s+(h.freebet?parseFlex(h.stake)||0:0),0)||1))*100
-                                            : (totalStake>0?(minProfit/totalStake)*100:0));
-    results = { profits, totalStake, roi };
-  }
-
-  // ===== State Ops =====
-  function setHouse(idx, patch, setOverrideKeys = []) {
-    const prev = houses[idx];
-    const h = { ...prev, ...patch };
-
-    const oddVal = parseFlex(h.odd) || 0;
-    const incVal = parseFlex(h.increase) || 0;
-    h.finalOdd = h.freebet ? Math.max(oddVal - 1, 0) : oddVal * (1 + incVal / 100);
-
-    // Se LAY e sem override manual, calcula responsabilidade = stake*(odd-1)
-    if (h.lay && !(manualOverrides[idx] && manualOverrides[idx].responsibility)) {
-      const stakeVal = parseFlex(h.stake) || 0;
-      if (stakeVal > 0 && oddVal > 1) h.responsibility = fmtDec(stakeVal * (oddVal - 1));
-      else if (!h.responsibility) h.responsibility = "";
-    }
-
-    houses[idx] = h;
-
-    if (setOverrideKeys.length) {
-      manualOverrides[idx] = manualOverrides[idx] || {};
-      setOverrideKeys.forEach(k => manualOverrides[idx][k] = true);
-    }
-
-    updateHouseUI(idx);
-    recalcStakeDistribution(idx); // << novo: ajusta outras casas quando necessário
-    recalcAndUpdate(false);       // recalcula e atualiza resultados, sem reescrever inputs já sincronizados
-  }
-
-  function recalcStakeDistribution(sourceIdx) {
+  // ---- distribuição (FIX AQUI) ----
+  function recalcStakeDistribution() {
     const active = activeHouses();
     const fixedIndex = active.findIndex(h => h.fixedStake);
     if (fixedIndex === -1) return;
 
     const fixed = active[fixedIndex];
     const fixedStake = parseFlex(fixed.stake) || 0;
-    const fixedOdd = fixed.finalOdd;
+    const fixedOdd   = fixed.finalOdd;
     if (!(fixedStake > 0 && fixedOdd > 0)) return;
 
     let changed = false;
@@ -222,43 +177,38 @@
       const oddVal = parseFlex(h.odd) || 0;
       const stakeVal = parseFlex(h.stake) || 0;
 
-      // Atualiza responsabilidade lay automática
       if (h.lay && !overrides.responsibility && oddVal > 1 && stakeVal > 0) {
         const responsibility = stakeVal * (oddVal - 1);
         const current = parseFlex(h.responsibility) || 0;
-        if (Math.abs(current - responsibility) > 0.005) {
+        if (Math.abs(current - responsibility) > 1e-6) {
           changed = true;
           newHouses[idx] = { ...newHouses[idx], responsibility: fmtDec(responsibility) };
         }
       }
 
-      // Recalcula stakes das casas não-fixas sem override
       if (idx !== fixedIndex && h.finalOdd > 0 && !overrides.stake) {
         const fixedCommission = fixed.commission || 0;
         const houseCommission = h.commission || 0;
-        const fixedProfit = fixedStake * fixedOdd * (1 - fixedCommission / 100);
+        const fixedProfit = fixedStake * fixedOdd * (1 - fixedCommission/100);
 
         let calcStake;
         if (h.lay) {
-          calcStake = fixedProfit / (h.finalOdd - houseCommission / 100);
+          calcStake = fixedProfit / (h.finalOdd - houseCommission/100);
         } else {
-          const effectiveOdd = h.finalOdd * (1 - houseCommission / 100);
-          calcStake = fixedProfit / effectiveOdd;
+          const eff = h.finalOdd * (1 - houseCommission/100);
+          calcStake = fixedProfit / eff;
         }
 
-        let finalStake;
-        if (h.lay) finalStake = fmtDec(calcStake);
-        else finalStake = roundStake(calcStake);
-
-        const currentStake = parseFlex(h.stake) || 0;
-        const finalStakeNum = parseFlex(finalStake) || 0;
-        if (Math.abs(currentStake - finalStakeNum) > 0.005) {
+        const finalStakeStr = h.lay ? fmtDec(calcStake) : roundStake(calcStake);
+        const finalStakeNum = parseFlex(finalStakeStr) || 0;
+        const cur = parseFlex(h.stake) || 0;
+        if (Math.abs(cur - finalStakeNum) > 1e-6) {
           changed = true;
           if (h.lay) {
             const resp = finalStakeNum * Math.max(oddVal - 1, 0);
-            newHouses[idx] = { ...newHouses[idx], stake: finalStake, responsibility: fmtDec(resp), fixedStake: false };
+            newHouses[idx] = { ...newHouses[idx], stake: finalStakeStr, responsibility: fmtDec(resp), fixedStake: false };
           } else {
-            newHouses[idx] = { ...newHouses[idx], stake: finalStake, fixedStake: false };
+            newHouses[idx] = { ...newHouses[idx], stake: finalStakeStr, fixedStake: false };
           }
         }
       }
@@ -266,24 +216,16 @@
 
     if (changed) {
       houses = newHouses;
+      // >>>>>>>>>>>>>>>>> FIX: refletir também nos inputs dos cards
       updateAllHouseUIs();
     }
   }
 
-  function fixStake(idx) {
-    houses = houses.map((h, i) => ({ ...h, fixedStake: i === idx ? !h.fixedStake : false }));
-    recalcStakeDistribution(idx);
-    recalcAndUpdate();
-  }
-
-  // ===== Render inicial =====
-  function HouseCard(idx, h) {
+  // ---- eventos / render ----
+  function cardHTML(idx, h) {
     const oddDisplay = toFixed2(h.finalOdd || 0).replace('.', ',');
-    const stakeVal = h.stake || "";
-    const respVal = h.lay ? (h.responsibility || "") : "";
-
     return `
-      <div class="bg-gray-900/40 backdrop-blur-md rounded-xl p-3 border border-cyan-500/20 shadow-lg shadow-cyan-500/10 hover:shadow-cyan-500/15 hover:border-cyan-400/30 transition-all duration-300 h-full">
+      <div id="card-${idx}" class="bg-gray-900/40 backdrop-blur-md rounded-xl p-3 border border-cyan-500/20 shadow-lg shadow-cyan-500/10 hover:shadow-cyan-500/15 hover:border-cyan-400/30 transition-all duration-300 h-full">
         <h3 class="text-cyan-400 text-sm mb-2 font-bold uppercase tracking-wider text-center">Casa ${idx + 1}</h3>
         <div class="space-y-2">
           <div class="grid grid-cols-2 gap-2">
@@ -298,22 +240,12 @@
             </div>
           </div>
 
-          ${h.lay ? `
-          <div>
-            <label class="text-cyan-200 mb-1 block text-xs" for="responsibility-${idx}">Responsabilidade</label>
-            <div class="relative">
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-300 text-xs font-bold">R$</span>
-              <input id="responsibility-${idx}" data-action="responsibility" data-idx="${idx}" type="text" inputmode="decimal" value="${respVal}"
-                class="pl-10 flex h-8 w-full rounded-lg bg-gray-900/50 border border-cyan-500/30 text-cyan-100 px-3 text-xs shadow-lg backdrop-blur-sm transition-all duration-200 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none hover:border-cyan-400/50 placeholder:text-cyan-300/50 font-mono" />
-            </div>
-          </div>` : ``}
-
           <div>
             <label class="text-cyan-200 mb-1 block text-xs" for="stake-${idx}">Stake</label>
             <div class="flex gap-2">
               <div class="relative flex-1">
                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-300 text-xs font-bold">R$</span>
-                <input id="stake-${idx}" data-action="stake" data-idx="${idx}" type="text" inputmode="decimal" value="${stakeVal}"
+                <input id="stake-${idx}" data-action="stake" data-idx="${idx}" type="text" inputmode="decimal" value="${h.stake || ''}"
                   class="pl-10 flex h-8 w-full rounded-lg bg-gray-900/50 border border-cyan-500/30 text-cyan-100 px-3 text-xs shadow-lg backdrop-blur-sm transition-all duration-200 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none hover:border-cyan-400/50 placeholder:text-cyan-300/50 font-mono" />
               </div>
               <button data-action="toggleLay" data-idx="${idx}"
@@ -346,6 +278,16 @@
             </div>
           </div>` : ``}
 
+          ${h.lay ? `
+          <div class="mt-2">
+            <label class="text-cyan-200 mb-1 block text-xs" for="responsibility-${idx}">Responsabilidade</label>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-300 text-xs font-bold">R$</span>
+              <input id="responsibility-${idx}" data-action="responsibility" data-idx="${idx}" type="text" inputmode="decimal" value="${h.responsibility || ''}"
+                class="pl-10 flex h-8 w-full rounded-lg bg-gray-900/50 border border-cyan-500/30 text-cyan-100 px-3 text-xs shadow-lg backdrop-blur-sm transition-all duration-200 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none hover:border-cyan-400/50 placeholder:text-cyan-300/50 font-mono" />
+            </div>
+          </div>` : ``}
+
           <button data-action="fixStake" data-idx="${idx}"
             class="w-full h-8 text-xs font-bold uppercase tracking-wider rounded-lg ${h.fixedStake ? 'bg-gradient-to-r from-green-500 to-emerald-500 shadow-green-500/25' : 'bg-gradient-to-r from-gray-600 to-gray-700 shadow-gray-600/25'}">
             ${h.fixedStake ? 'Stake Fixa' : 'Fixar Stake'}
@@ -356,7 +298,7 @@
   }
 
   function renderHouses() {
-    const list = activeHouses().map((h, idx) => HouseCard(idx, h)).join("");
+    const list = activeHouses().map((h, idx) => cardHTML(idx, h)).join("");
     return `<div id="houses" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">${list}</div>`;
   }
 
@@ -415,81 +357,126 @@
     `;
   }
 
-  function initialRender() {
+  function renderAll() {
     const app = $("#app");
     app.innerHTML = `${renderTop()}${renderHouses()}${renderResultsShell()}`;
 
-    // Eventos gerais
     $("#numHouses").addEventListener("change", (e) => {
       numHouses = parseInt(e.target.value, 10);
       $("#houses").outerHTML = renderHouses();
-      attachHouseEvents();
-      recalcAndUpdate();
+      calculateResults(activeHouses()); updateAllHouseUIs(); updateResultsUI();
     });
     $("#rounding").addEventListener("change", (e) => {
       displayRounding = e.target.value;
       roundingValue = parseFloat(displayRounding.replace(',', '.'));
-      recalcStakeDistribution(-1);
-      recalcAndUpdate();
+      recalcStakeDistribution();
+      calculateResults(activeHouses()); updateAllHouseUIs(); updateResultsUI();
     });
 
-    attachHouseEvents();
-    recalcAndUpdate();
-  }
+    const container = $("#houses");
 
-  function attachHouseEvents() {
-    const grid = $("#houses");
-
-    // Máscara permissiva para vírgula e ponto
-    grid.querySelectorAll('input[inputmode="decimal"]').forEach((el) => {
-      el.addEventListener('input', (e) => {
-        const caret = el.selectionStart;
-        const before = el.value;
-        el.value = keepNumeric(before);
-        try { el.setSelectionRange(caret, caret); } catch {}
-      });
-      el.addEventListener('blur', (e) => {
-        const val = parseFlex(el.value);
-        if (Number.isFinite(val)) el.value = fmtDec(val);
-      });
-    });
-
-    // Delegação principal
-    grid.querySelectorAll("[data-action]").forEach(el => {
-      const action = el.getAttribute("data-action");
-      const idx = parseInt(el.getAttribute("data-idx"), 10);
+    container.addEventListener("input", (e) => {
+      const t = e.target;
+      if (t.getAttribute("inputmode") === "decimal") {
+        const caret = t.selectionStart;
+        const before = t.value;
+        t.value = keepNumeric(before);
+        try { t.setSelectionRange(caret, caret); } catch {}
+      }
+      const action = t.getAttribute("data-action");
+      if (!action) return;
+      const idx = parseInt(t.getAttribute("data-idx") || "-1", 10);
+      if (idx < 0) return;
 
       if (action === "odd") {
-        el.addEventListener("input", (e) => setHouse(idx, { odd: e.target.value }, ["odd"]));
+        setHouse(idx, { odd: t.value });
       } else if (action === "stake") {
-        el.addEventListener("input", (e) => setHouse(idx, { stake: e.target.value }, ["stake"]));
+        setHouse(idx, { stake: t.value }, ["stake"]);
       } else if (action === "responsibility") {
-        el.addEventListener("input", (e) => setHouse(idx, { responsibility: e.target.value }, ["responsibility"]));
-      } else if (action === "toggleLay") {
-        el.addEventListener("click", () => setHouse(idx, { lay: !houses[idx].lay }));
-      } else if (action === "toggleCommission") {
-        el.addEventListener("change", (e) => setHouse(idx, { commission: e.target.checked ? 0 : null }, ["commission"]));
+        setHouse(idx, { responsibility: t.value }, ["responsibility"]);
       } else if (action === "commissionValue") {
-        el.addEventListener("input", (e) => {
-          const val = parseFlex(e.target.value);
-          if (Number.isFinite(val)) setHouse(idx, { commission: val }, ["commission"]);
-          else if (e.target.value === "") setHouse(idx, { commission: 0 }, ["commission"]);
-        });
-        el.addEventListener("blur", (e) => {
-          const val = parseFlex(e.target.value);
-          if (Number.isFinite(val)) e.target.value = val.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-          if (e.target.value === "") setHouse(idx, { commission: 0 }, ["commission"]);
-        });
-      } else if (action === "toggleFreebet") {
-        el.addEventListener("change", (e) => setHouse(idx, { freebet: e.target.checked }));
-      } else if (action === "fixStake") {
-        el.addEventListener("click", () => fixStake(idx));
+        const val = parseFlex(t.value);
+        if (Number.isFinite(val)) setHouse(idx, { commission: val });
+        else if (t.value === "") setHouse(idx, { commission: 0 });
       }
+
+      recalcStakeDistribution();
+      calculateResults(activeHouses()); updateAllHouseUIs(); updateResultsUI();
     });
+
+    container.addEventListener("blur", (e) => {
+      const el = e.target;
+      if (el.getAttribute("inputmode") === "decimal") {
+        const v = parseFlex(el.value);
+        if (Number.isFinite(v)) el.value = fmtDec(v);
+      }
+    }, true);
+
+    container.addEventListener("change", (e) => {
+      const el = e.target;
+      const action = el.getAttribute("data-action");
+      if (!action) return;
+      const idx = parseInt(el.getAttribute("data-idx") || "-1", 10);
+      if (idx < 0) return;
+
+      if (action === "toggleCommission") {
+        const newVal = el.checked ? 0 : null;
+        setHouse(idx, { commission: newVal });
+        const card = document.getElementById(`card-${idx}`);
+        if (card) card.outerHTML = cardHTML(idx, houses[idx]);
+      } else if (action === "toggleFreebet") {
+        setHouse(idx, { freebet: el.checked });
+      }
+      recalcStakeDistribution();
+      calculateResults(activeHouses()); updateAllHouseUIs(); updateResultsUI();
+    });
+
+    container.addEventListener("click", (e) => {
+      const el = e.target.closest("[data-action]");
+      if (!el) return;
+      const action = el.getAttribute("data-action");
+      const idx = parseInt(el.getAttribute("data-idx") || "-1", 10);
+      if (idx < 0) return;
+
+      if (action === "toggleLay") {
+        setHouse(idx, { lay: !houses[idx].lay });
+        const card = document.getElementById(`card-${idx}`);
+        if (card) card.outerHTML = cardHTML(idx, houses[idx]);
+      } else if (action === "fixStake") {
+        houses = houses.map((h, i) => ({ ...h, fixedStake: i === idx ? !h.fixedStake : false }));
+      }
+      recalcStakeDistribution();
+      calculateResults(activeHouses()); updateAllHouseUIs(); updateResultsUI();
+    });
+
+    calculateResults(activeHouses()); updateAllHouseUIs(); updateResultsUI();
   }
 
-  // Boot
-  initialRender();
+  function setHouse(idx, patch, setOverrideKeys = []) {
+    const prev = houses[idx];
+    const h = { ...prev, ...patch };
+
+    const oddVal = parseFlex(h.odd) || 0;
+    const incVal = parseFlex(h.increase) || 0;
+    h.finalOdd = h.freebet ? Math.max(oddVal - 1, 0) : oddVal * (1 + incVal / 100);
+
+    if (h.lay && !(manualOverrides[idx] && manualOverrides[idx].responsibility)) {
+      const stakeVal = parseFlex(h.stake) || 0;
+      if (stakeVal > 0 && oddVal > 1) h.responsibility = fmtDec(stakeVal * (oddVal - 1));
+      else if (!h.responsibility) h.responsibility = "";
+    }
+
+    houses[idx] = h;
+
+    if (setOverrideKeys.length) {
+      manualOverrides[idx] = manualOverrides[idx] || {};
+      setOverrideKeys.forEach(k => manualOverrides[idx][k] = true);
+    }
+
+    updateCardComputed(idx);
+  }
+
+  renderAll();
 })();
 </script>
 

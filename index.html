@@ -1,903 +1,467 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadoras Shark</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(33, 52, 53, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(70, 104, 91, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 80%, rgba(100, 138, 100, 0.08) 0%, transparent 50%),
-                linear-gradient(135deg, #213435 0%, #46685B 50%, #213435 100%);
-            min-height: 100vh;
-            color: #E1E3AC;
-            position: relative;
-            overflow-x: hidden;
-        }
-        
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 200%;
-            height: 200%;
-            background: 
-                radial-gradient(circle, rgba(166, 185, 133, 0.05) 2px, transparent 2px),
-                radial-gradient(circle, rgba(100, 138, 100, 0.03) 1px, transparent 1px);
-            background-size: 120px 120px, 60px 60px;
-            animation: floatMoney 25s infinite linear;
-            z-index: -1;
-            pointer-events: none;
-        }
-        
-        @keyframes floatMoney {
-            0% {
-                transform: translateX(-50%) translateY(-50%) rotate(0deg);
-            }
-            100% {
-                transform: translateX(-48%) translateY(-48%) rotate(360deg);
-            }
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .header {
-            text-align: center;
-            color: #A6B985;
-            margin-bottom: 30px;
-            text-shadow: 0 0 20px rgba(166, 185, 133, 0.5);
-        }
-        
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, #A6B985, #648A64, #46685B);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .tabs {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 30px;
-            background: linear-gradient(135deg, #213435, #46685B);
-            border: 2px solid #A6B985;
-            border-radius: 50px;
-            padding: 5px;
-            box-shadow: 0 10px 30px rgba(166, 185, 133, 0.3), inset 0 1px 0 rgba(166, 185, 133, 0.1);
-            flex-wrap: wrap;
-        }
-        
-        .tab {
-            padding: 8px 15px;
-            background: transparent;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            color: #A6B985;
-            font-weight: bold;
-            margin: 2px;
-            text-shadow: 0 0 10px rgba(166, 185, 133, 0.3);
-            font-size: 14px;
-        }
-        
-        .tab.active {
-            background: linear-gradient(45deg, #A6B985, #648A64);
-            color: #213435;
-            box-shadow: 0 5px 15px rgba(166, 185, 133, 0.4);
-            text-shadow: none;
-        }
-        
-        .calculator-section {
-            display: none;
-        }
-        
-        .calculator-section.active {
-            display: block;
-        }
-        
-        .calculator-card {
-            background: linear-gradient(135deg, #213435, #46685B);
-            border: 2px solid #A6B985;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(166, 185, 133, 0.2), inset 0 1px 0 rgba(166, 185, 133, 0.1);
-            overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .calculator-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 25px 50px rgba(166, 185, 133, 0.3), 0 0 20px rgba(166, 185, 133, 0.2);
-        }
-        
-        .card-header {
-            padding: 20px;
-            color: #213435;
-            font-weight: bold;
-            text-align: center;
-            background: linear-gradient(45deg, #A6B985, #648A64);
-        }
-        
-        .card-body {
-            padding: 25px;
-            background: #213435;
-        }
-        
-        .input-group {
-            margin-bottom: 20px;
-        }
-        
-        .input-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #A6B985;
-            text-shadow: 0 0 5px rgba(166, 185, 133, 0.3);
-        }
-        
-        .input-group input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #46685B;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            background: #46685B;
-            color: #E1E3AC;
-        }
-        
-        .input-group input:focus {
-            border-color: #A6B985;
-            outline: none;
-            box-shadow: 0 0 15px rgba(166, 185, 133, 0.4);
-            background: #213435;
-        }
-        
-        .input-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-        
-        .btn-calculate {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(45deg, #A6B985, #648A64);
-            color: #213435;
-            border: none;
-            border-radius: 50px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin: 20px 0;
-            box-shadow: 0 5px 15px rgba(166, 185, 133, 0.3);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .btn-calculate:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(166, 185, 133, 0.5);
-            background: linear-gradient(45deg, #648A64, #A6B985);
-        }
-        
-        .results {
-            background: linear-gradient(135deg, #213435, #46685B);
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 20px;
-            border: 1px solid #A6B985;
-            box-shadow: 0 10px 20px rgba(166, 185, 133, 0.2), inset 0 1px 0 rgba(166, 185, 133, 0.1);
-        }
-        
-        .results h4 {
-            color: #A6B985;
-            margin-bottom: 15px;
-            text-shadow: 0 0 10px rgba(166, 185, 133, 0.3);
-        }
-        
-        .result-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #46685B;
-            color: #E1E3AC;
-        }
-        
-        .result-item:last-child {
-            border-bottom: none;
-        }
-        
-        .result-value {
-            font-weight: bold;
-            color: #A6B985;
-            text-shadow: 0 0 5px rgba(166, 185, 133, 0.3);
-        }
-        
-        .status-ruim {
-            color: #ff6b6b !important;
-            text-shadow: 0 0 8px rgba(255, 107, 107, 0.4) !important;
-        }
-        
-        .status-ruim .emoji-pulse {
-            animation: pulse-red-emoji 1.5s infinite;
-            display: inline-block;
-        }
-        
-        .status-aceitavel {
-            color: #ffa726 !important;
-            text-shadow: 0 0 8px rgba(255, 167, 38, 0.4) !important;
-        }
-        
-        .status-aceitavel .emoji-pulse {
-            animation: pulse-yellow-emoji 2s infinite;
-            display: inline-block;
-        }
-        
-        .status-muito-bom {
-            color: #4ecdc4 !important;
-            text-shadow: 0 0 8px rgba(78, 205, 196, 0.4) !important;
-        }
-        
-        .status-muito-bom .emoji-pulse {
-            animation: pulse-green-emoji 1.2s infinite;
-            display: inline-block;
-        }
-        
-        @keyframes pulse-red-emoji {
-            0% { 
-                transform: scale(1);
-                filter: brightness(1);
-            }
-            50% { 
-                transform: scale(1.3);
-                filter: brightness(1.5) drop-shadow(0 0 10px rgba(255, 107, 107, 0.8));
-            }
-            100% { 
-                transform: scale(1);
-                filter: brightness(1);
-            }
-        }
-        
-        @keyframes pulse-yellow-emoji {
-            0% { 
-                transform: scale(1) rotate(0deg);
-                filter: brightness(1);
-            }
-            25% { 
-                transform: scale(1.1) rotate(-5deg);
-                filter: brightness(1.3);
-            }
-            50% { 
-                transform: scale(1.2) rotate(0deg);
-                filter: brightness(1.5) drop-shadow(0 0 8px rgba(255, 167, 38, 0.6));
-            }
-            75% { 
-                transform: scale(1.1) rotate(5deg);
-                filter: brightness(1.3);
-            }
-            100% { 
-                transform: scale(1) rotate(0deg);
-                filter: brightness(1);
-            }
-        }
-        
-        @keyframes pulse-green-emoji {
-            0% { 
-                transform: scale(1);
-                filter: brightness(1);
-            }
-            30% { 
-                transform: scale(1.4);
-                filter: brightness(1.8) drop-shadow(0 0 15px rgba(78, 205, 196, 1));
-            }
-            60% { 
-                transform: scale(1.2);
-                filter: brightness(1.4);
-            }
-            100% { 
-                transform: scale(1);
-                filter: brightness(1);
-            }
-        }
-        
-        @keyframes pulse-red {
-            0%, 100% { text-shadow: 0 0 8px rgba(255, 107, 107, 0.4); }
-            50% { text-shadow: 0 0 15px rgba(255, 107, 107, 0.7); }
-        }
-        
-        @keyframes pulse-green {
-            0%, 100% { text-shadow: 0 0 8px rgba(78, 205, 196, 0.4); }
-            50% { text-shadow: 0 0 15px rgba(78, 205, 196, 0.7); }
-        }
-        
-        .highlight {
-            background: linear-gradient(45deg, #A6B985, #648A64);
-            padding: 15px;
-            border-radius: 10px;
-            margin: 10px 0;
-            border-left: 4px solid #46685B;
-            color: #213435;
-            font-weight: bold;
-            box-shadow: 0 5px 15px rgba(166, 185, 133, 0.2);
-        }
-
-        @media (max-width: 768px) {
-            .input-row {
-                grid-template-columns: 1fr;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .tabs {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .tab {
-                margin: 3px;
-                width: 200px;
-                text-align: center;
-            }
-            
-            /* Ajustes específicos para resultados no mobile */
-            .results {
-                font-size: 14px;
-                padding: 15px;
-            }
-            
-            .result-item {
-                flex-direction: column;
-                align-items: flex-start;
-                padding: 10px 0;
-                text-align: left;
-            }
-            
-            .result-item span:first-child {
-                margin-bottom: 5px;
-                font-weight: bold;
-                color: #A6B985;
-            }
-            
-            .result-value {
-                font-size: 16px;
-                margin-left: 0;
-            }
-            
-            /* Ajustar layout do gráfico no mobile */
-            #sc-results > div {
-                flex-direction: column !important;
-            }
-            
-            #sc-results > div > div:first-child {
-                margin-right: 0 !important;
-                margin-bottom: 20px;
-            }
-            
-            #sc-results > div > div:last-child {
-                flex: none !important;
-                align-self: center;
-            }
-            
-            /* Reduzir tamanho do gráfico no mobile */
-            #sc-chart {
-                width: 120px !important;
-                height: 120px !important;
-            }
-            
-            /* Ajustar container do gráfico */
-            #sc-results > div > div:last-child > div:first-child {
-                width: 120px !important;
-                height: 120px !important;
-            }
-            
-            /* Melhorar legenda do gráfico no mobile */
-            #sc-results > div > div:last-child > div:last-child {
-                font-size: 11px;
-                gap: 10px !important;
-                flex-wrap: wrap;
-            }
-            
-            /* Ajustar inputs no mobile */
-            .input-group input {
-                font-size: 16px; /* Previne zoom no iOS */
-                padding: 14px;
-            }
-            
-            .input-group label {
-                font-size: 14px;
-            }
-            
-            /* Reduzir padding dos cards no mobile */
-            .card-body {
-                padding: 20px 15px;
-            }
-            
-            .card-header {
-                padding: 15px;
-            }
-            
-            .card-header h2 {
-                font-size: 1.3rem;
-            }
-            
-            /* Melhorar botão de calcular no mobile */
-            .btn-calculate {
-                font-size: 14px;
-                padding: 12px;
-                margin: 15px 0;
-            }
-            
-            /* Ajustar highlight box no mobile */
-            .highlight {
-                padding: 12px;
-                font-size: 14px;
-                margin: 8px 0;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .container {
-                padding: 10px;
-            }
-            
-            .header h1 {
-                font-size: 1.6rem;
-            }
-            
-            .tabs {
-                padding: 3px;
-                border-radius: 25px;
-            }
-            
-            .tab {
-                width: 150px;
-                font-size: 12px;
-                padding: 6px 10px;
-            }
-            
-            .results {
-                font-size: 13px;
-                padding: 12px;
-            }
-            
-            .result-value {
-                font-size: 15px;
-            }
-            
-            .card-body {
-                padding: 15px 10px;
-            }
-            
-            .input-group {
-                margin-bottom: 15px;
-            }
-            
-            /* Garantir que textos longos quebrem adequadamente */
-            .result-item span {
-                word-break: break-word;
-                line-height: 1.3;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calculadora Surebet — Shark</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root { color-scheme: dark; }
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance:textfield; }
+  </style>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🎯 Calculadoras Shark 100% Green</h1>
-        </div>
-        
-        <div class="tabs">
-            <button class="tab active" onclick="mostrarCalculadora('shark-completa')">🦈 Aposta Segura</button>
-            <button class="tab" onclick="mostrarCalculadora('freebet-lay')">📊 Freebet Lay</button>
-            <button class="tab" onclick="mostrarCalculadora('lay-tradicional')">⚡ Lay Tradicional</button>
-            <button class="tab" onclick="mostrarCalculadora('odd-aumento')">📈 Odd Aumento %</button>
-        </div>
-        
-        <!-- SHARK COMPLETA -->
-        <div id="shark-completa" class="calculator-section active">
-            <div class="calculator-card">
-                <div class="card-header">
-                    <h2>🦈 Aposta Segura</h2>
-                </div>
-                <div class="card-body">
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label>ENTRADA 1 - ODD</label>
-                            <input type="number" id="sc-odd1" value="3.40" step="0.01">
-                        </div>
-                        <div class="input-group">
-                            <label>ENTRADA 1 - APOSTA (R$)</label>
-                            <input type="number" id="sc-aposta1" value="25.00" step="0.01">
-                        </div>
-                    </div>
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label>ENTRADA 2 LAY - ODD</label>
-                            <input type="number" id="sc-odd2" value="3.95" step="0.01">
-                        </div>
-                        <div class="input-group">
-                            <label>COMISSÃO (%)</label>
-                            <input type="number" id="sc-comissao" value="4.50" step="0.01">
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label>FREEBET (R$)</label>
-                        <input type="number" id="sc-freebet" value="25.00" step="0.01">
-                    </div>
-                    <button class="btn-calculate" onclick="calcularSharkCompleta()">🚀 Calcular</button>
-                    <div id="sc-results" class="results" style="display:none;">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap;">
-                            <div style="flex: 1; margin-right: 20px; min-width: 300px;">
-                                <h4>📈 Resultados:</h4>
-                                <div class="result-item">
-                                    <span>ENTRADA 2 LAY - APOSTAR →</span>
-                                    <span class="result-value" id="sc-apostar2">R$ 0,00</span>
-                                </div>
-                                <div class="result-item">
-                                    <span>SALDO NECESSARIO (RESPONSABILIDADE)</span>
-                                    <span class="result-value" id="sc-saldo-necessario">R$ 0,00</span>
-                                </div>
-                                <div class="result-item">
-                                    <span>SE BATER NA CASA</span>
-                                    <span class="result-value" id="sc-casa">R$ 0,00</span>
-                                </div>
-                                <div class="result-item">
-                                    <span>SE BATER NA EXCHANGE (PERCA)</span>
-                                    <span class="result-value" id="sc-exchange">R$ 0,00</span>
-                                </div>
-                                <div class="result-item">
-                                    <span>LUCRO AO GIRAR A FREEBET</span>
-                                    <span class="result-value" id="sc-lucro-freebet">R$ 0,00</span>
-                                </div>
-                            </div>
-                            <div style="flex: 0 0 200px; text-align: center; min-width: 200px;">
-                                <div style="position: relative; width: 150px; height: 150px; margin: 0 auto;">
-                                    <canvas id="sc-chart" width="150" height="150" style="border-radius: 50%;"></canvas>
-                                </div>
-                                <div style="margin-top: 15px; display: flex; justify-content: center; gap: 15px; font-size: 12px;">
-                                    <div><span style="color: #A6B985; font-size: 16px;">●</span> LUCRO DIRETO</div>
-                                    <div><span style="color: #648A64; font-size: 16px;">●</span> GIRAR FREEBET</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- FREEBET LAY -->
-        <div id="freebet-lay" class="calculator-section">
-            <div class="calculator-card">
-                <div class="card-header">
-                    <h2>📊 Freebet Lay Freebet</h2>
-                </div>
-                <div class="card-body">
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label>ODD Casa</label>
-                            <input type="number" id="fl-odd-casa" value="4.00" step="0.01">
-                        </div>
-                        <div class="input-group">
-                            <label>ODD Lay Betbra</label>
-                            <input type="number" id="fl-odd-lay" value="4.60" step="0.01">
-                        </div>
-                    </div>
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label>Valor da Freebet (R$)</label>
-                            <input type="number" id="fl-valor-freebet" value="55.00" step="0.01">
-                        </div>
-                        <div class="input-group">
-                            <label>Comissão Exchange (%)</label>
-                            <input type="number" id="fl-comissao" value="4.50" step="0.01">
-                        </div>
-                    </div>
-                    <button class="btn-calculate" onclick="calcularFreebetLay()">🚀 Calcular</button>
-                    <div id="fl-results" class="results" style="display:none;">
-                        <h4>📈 Resultados:</h4>
-                        <div class="result-item">
-                            <span>Valor para apostar:</span>
-                            <span class="result-value" id="fl-valor-apostar">R$ 0,00</span>
-                        </div>
-                        <div class="result-item">
-                            <span>Responsabilidade:</span>
-                            <span class="result-value" id="fl-responsabilidade">R$ 0,00</span>
-                        </div>
-                        <div class="result-item">
-                            <span>Lucro/Prejuízo:</span>
-                            <span class="result-value" id="fl-lucro">R$ 0,00</span>
-                        </div>
-                        <div class="result-item">
-                            <span>Percentual:</span>
-                            <span class="result-value" id="fl-percentual">0,00%</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- LAY TRADICIONAL -->
-        <div id="lay-tradicional" class="calculator-section">
-            <div class="calculator-card">
-                <div class="card-header">
-                    <h2>⚡ Calculadora Lay sem Freebet</h2>
-                </div>
-                <div class="card-body">
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label>ODD Casa</label>
-                            <input type="number" id="lt-odd-casa" value="3.75" step="0.01">
-                        </div>
-                        <div class="input-group">
-                            <label>ODD Lay Betbra</label>
-                            <input type="number" id="lt-odd-lay" value="3.90" step="0.01">
-                        </div>
-                    </div>
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label>Aposta a favor (R$)</label>
-                            <input type="number" id="lt-aposta" value="25.00" step="0.01">
-                        </div>
-                        <div class="input-group">
-                            <label>Comissão (%)</label>
-                            <input type="number" id="lt-comissao" value="4.50" step="0.01">
-                        </div>
-                    </div>
-                    <button class="btn-calculate" onclick="calcularLayTradicional()">🚀 Calcular</button>
-                    <div id="lt-results" class="results" style="display:none;">
-                        <h4>📈 Resultados:</h4>
-                        <div class="result-item">
-                            <span>Valor para apostar:</span>
-                            <span class="result-value" id="lt-valor-apostar">R$ 0,00</span>
-                        </div>
-                        <div class="result-item">
-                            <span>Responsabilidade:</span>
-                            <span class="result-value" id="lt-responsabilidade">R$ 0,00</span>
-                        </div>
-                        <div class="result-item">
-                            <span>Lucro/Prejuízo:</span>
-                            <span class="result-value" id="lt-lucro">R$ 0,00</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- ODD AUMENTO -->
-        <div id="odd-aumento" class="calculator-section">
-            <div class="calculator-card">
-                <div class="card-header">
-                    <h2>📈 Descobrir Odd Aumento %</h2>
-                </div>
-                <div class="card-body">
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label>ODD Normal</label>
-                            <input type="number" id="oa-odd-normal" value="6.80" step="0.01">
-                        </div>
-                        <div class="input-group">
-                            <label>% Aumento</label>
-                            <input type="number" id="oa-aumento" value="25.00" step="0.01">
-                        </div>
-                    </div>
-                    <button class="btn-calculate" onclick="calcularOddAumento()">🚀 Calcular</button>
-                    <div id="oa-results" class="results" style="display:none;">
-                        <h4>📈 Resultado:</h4>
-                        <div class="result-item">
-                            <span>ODD com Aumento:</span>
-                            <span class="result-value" id="oa-odd-final">0,00</span>
-                        </div>
-                        <div class="highlight">
-                            <strong>💡 Dica:</strong> Com <span id="oa-percent-display">0%</span> de aumento, sua odd de <span id="oa-odd-display">0</span> vira <span id="oa-final-display">0</span>!
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<body class="min-h-screen p-4 md:p-8" style="background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 25%, #16213e 50%, #0f3460 100%);">
+  <div class="max-w-6xl mx-auto">
+    <div id="app"></div>
+  </div>
 
-    <script>
-        function mostrarCalculadora(calculadoraId) {
-            // Esconder todas as seções
-            const secoes = document.querySelectorAll('.calculator-section');
-            secoes.forEach(secao => {
-                secao.classList.remove('active');
-            });
-            
-            // Remover classe ativa das abas
-            const abas = document.querySelectorAll('.tab');
-            abas.forEach(aba => {
-                aba.classList.remove('active');
-            });
-            
-            // Mostrar seção selecionada e ativar aba
-            document.getElementById(calculadoraId).classList.add('active');
-            event.target.classList.add('active');
+<script>
+(() => {
+  const MAX_HOUSES = 6;
+  let numHouses = 2;
+  let roundingValue = 0.01;
+  let displayRounding = "0.01";
+
+  let manualOverrides = {};
+
+  let houses = Array.from({ length: MAX_HOUSES }).map((_, index) => ({
+    odd: "",
+    increase: "",
+    finalOdd: 0,
+    stake: "0",
+    commission: null,
+    freebet: false,
+    fixedStake: index === 0,
+    lay: false,
+    responsibility: ""
+  }));
+
+  let results = { profits: [], totalStake: 0, roi: 0 };
+
+  const cn = (...classes) => classes.filter(Boolean).join(" ");
+  const toFixed2 = (n) => (Number.isFinite(n) ? n.toFixed(2) : "0.00");
+  const fmtMoney = (n) => (Number.isFinite(n) ? n : 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const roundStake = (value) => {
+    if (value === "" || value === null || value === undefined) return value;
+    const numValue = parseFloat(value);
+    if (!Number.isFinite(numValue)) return value;
+    const rounded = Math.round(numValue / roundingValue) * roundingValue;
+    return rounded.toFixed(2);
+  };
+  const activeHouses = () => houses.slice(0, numHouses);
+
+  function calculateResults(active) {
+    let totalStake = 0;
+    let totalFreebetValue = 0;
+    const profits = new Array(active.length).fill(0);
+
+    active.forEach(h => {
+      const stake = parseFloat(h.stake) || 0;
+      const resp = parseFloat(h.responsibility) || 0;
+      if (h.freebet) totalFreebetValue += stake; else totalStake += h.lay ? resp : stake;
+    });
+
+    active.forEach((h, idx) => {
+      const stake = parseFloat(h.stake) || 0;
+      const odd = h.finalOdd || 0;
+      const commission = h.commission || 0;
+
+      if (h.lay) {
+        const resp = parseFloat(h.responsibility) || 0;
+        const profit = stake * (1 - commission / 100) - (totalStake - resp);
+        profits[idx] = profit;
+      } else if (h.freebet) {
+        const grossProfit = stake * odd - totalStake;
+        const comm = grossProfit > 0 ? (commission / 100) * grossProfit : 0;
+        profits[idx] = grossProfit - comm;
+      } else {
+        const effectiveOdd = odd * (1 - commission / 100);
+        const grossProfit = stake * effectiveOdd - totalStake;
+        profits[idx] = grossProfit;
+      }
+    });
+
+    const minProfit = profits.length ? Math.min(...profits) : 0;
+    const roi = (totalFreebetValue > 0)
+      ? (minProfit / totalFreebetValue) * 100
+      : (totalStake > 0 ? (minProfit / totalStake) * 100 : 0);
+
+    results = { profits, totalStake, roi };
+  }
+
+  function setHouse(idx, patch, setOverrideKeys = []) {
+    const prev = houses[idx];
+    const h = { ...prev, ...patch };
+
+    const oddVal = parseFloat(h.odd) || 0;
+    const incVal = parseFloat(h.increase) || 0;
+    h.finalOdd = h.freebet ? Math.max(oddVal - 1, 0) : oddVal * (1 + incVal / 100);
+
+    if (h.lay && !(manualOverrides[idx] && manualOverrides[idx].responsibility)) {
+      const stakeVal = parseFloat(h.stake) || 0;
+      if (stakeVal > 0 && oddVal > 1) {
+        h.responsibility = toFixed2(stakeVal * (oddVal - 1));
+      } else if (!h.responsibility) {
+        h.responsibility = "";
+      }
+    }
+
+    houses[idx] = h;
+
+    if (setOverrideKeys.length) {
+      manualOverrides[idx] = manualOverrides[idx] || {};
+      setOverrideKeys.forEach(k => manualOverrides[idx][k] = true);
+    }
+
+    recalc();
+  }
+
+  function fixStake(idx) {
+    houses = houses.map((h, i) => ({ ...h, fixedStake: i === idx ? !h.fixedStake : false }));
+    recalc();
+  }
+
+  function recalc() {
+    const active = activeHouses();
+    const fixedIndex = active.findIndex(h => h.fixedStake);
+
+    if (fixedIndex === -1) {
+      calculateResults(active);
+      render();
+      return;
+    }
+
+    const fixed = active[fixedIndex];
+    const fixedStake = parseFloat(fixed.stake) || 0;
+    const fixedOdd = fixed.finalOdd;
+
+    if (!(fixedStake > 0 && fixedOdd > 0)) {
+      calculateResults(active);
+      render();
+      return;
+    }
+
+    let updated = false;
+    const newHouses = [...houses];
+
+    active.forEach((h, idx) => {
+      const overrides = manualOverrides[idx] || {};
+      const oddVal = parseFloat(h.odd) || 0;
+      const stakeVal = parseFloat(h.stake) || 0;
+
+      if (h.lay && !overrides.responsibility && oddVal > 1 && stakeVal > 0) {
+        const responsibility = stakeVal * (oddVal - 1);
+        if (Math.abs((parseFloat(h.responsibility) || 0) - responsibility) > 0.01) {
+          updated = true;
+          newHouses[idx] = { ...newHouses[idx], responsibility: toFixed2(responsibility) };
         }
-        
-        function formatarMoeda(valor) {
-            return 'R$ ' + parseFloat(valor).toLocaleString('pt-BR', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
+      }
+
+      if (idx !== fixedIndex && h.finalOdd > 0 && !overrides.stake) {
+        const fixedCommission = fixed.commission || 0;
+        const houseCommission = h.commission || 0;
+        const fixedProfit = fixedStake * fixedOdd * (1 - fixedCommission / 100);
+
+        let calcStake;
+        if (h.lay) {
+          calcStake = fixedProfit / (h.finalOdd - houseCommission / 100);
+        } else {
+          const effectiveOdd = h.finalOdd * (1 - houseCommission / 100);
+          calcStake = fixedProfit / effectiveOdd;
         }
-        
-        function formatarPercentual(valor) {
-            return parseFloat(valor).toFixed(2) + '%';
+
+        let finalStake;
+        if (h.lay) finalStake = toFixed2(calcStake);
+        else finalStake = roundStake(calcStake);
+
+        if (Math.abs((parseFloat(h.stake) || 0) - parseFloat(finalStake)) > 0.01) {
+          updated = true;
+          if (h.lay) {
+            const resp = parseFloat(finalStake) * Math.max(oddVal - 1, 0);
+            newHouses[idx] = { ...newHouses[idx], stake: finalStake, responsibility: toFixed2(resp), fixedStake: false };
+          } else {
+            newHouses[idx] = { ...newHouses[idx], stake: finalStake, fixedStake: false };
+          }
         }
-        
-        function calcularSharkCompleta() {
-            const F13 = parseFloat(document.getElementById('sc-odd1').value); // ODD ENTRADA 1
-            const H13 = parseFloat(document.getElementById('sc-aposta1').value); // APOSTA ENTRADA 1
-            const F14 = parseFloat(document.getElementById('sc-odd2').value); // ODD ENTRADA 2 LAY
-            const L21 = parseFloat(document.getElementById('sc-comissao').value) / 100; // COMISSÃO
-            const F17 = parseFloat(document.getElementById('sc-freebet').value); // FREEBET
-            
-            // Fórmulas exatas do Excel:
-            
-            // M11 = SOMA(F17*70%)
-            const M11 = F17 * 0.7;
-            
-            // H15 = (H13*(F13-1)+H13-(F17*0,7))/(F14-L21)
-            const H15 = (H13 * (F13 - 1) + H13 - (F17 * 0.7)) / (F14 - L21);
-            
-            // I12 = SOMA(L21*H15)
-            const I12 = L21 * H15;
-            
-            // H16 = SOMA(F14*H15)-H15 (SALDO NECESSARIO)
-            const H16 = (F14 * H15) - H15;
-            
-            // H19 = SOMA(F13*H13-H13-H16)
-            const H19 = (F13 * H13) - H13 - H16;
-            
-            // H20 = SOMA(H15-H13)-I12
-            const H20 = (H15 - H13) - I12;
-            
-            // H21 = SOMA(H15-H13)+M11-I12 (LUCRO AO GIRAR A FREEBET)
-            const H21 = (H15 - H13) + M11 - I12;
-            
-            // Mapear para os resultados corretos:
-            document.getElementById('sc-apostar2').textContent = formatarMoeda(H15); // ENTRADA 2 LAY - APOSTAR
-            document.getElementById('sc-saldo-necessario').textContent = formatarMoeda(H16); // SALDO NECESSARIO (RESPONSABILIDADE)
-            document.getElementById('sc-casa').textContent = formatarMoeda(H19); // SE BATER NA CASA
-            document.getElementById('sc-exchange').textContent = formatarMoeda(H20); // SE BATER NA EXCHANGE
-            document.getElementById('sc-lucro-freebet').textContent = formatarMoeda(H21); // LUCRO AO GIRAR A FREEBET
-            
-            // Desenhar gráfico
-            desenharGraficoPizza(H19, H21);
-            
-            document.getElementById('sc-results').style.display = 'block';
-        }
-        
-        function desenharGraficoPizza(lucroDireto, lucroFreebet) {
-            const canvas = document.getElementById('sc-chart');
-            const ctx = canvas.getContext('2d');
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const radius = 60;
-            
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            const total = Math.abs(lucroDireto) + Math.abs(lucroFreebet);
-            if (total === 0) return;
-            
-            const angulo1 = (Math.abs(lucroDireto) / total) * 2 * Math.PI;
-            const angulo2 = (Math.abs(lucroFreebet) / total) * 2 * Math.PI;
-            
-            // Fatia 1 - Lucro Direto
-            ctx.beginPath();
-            ctx.moveTo(centerX, centerY);
-            ctx.arc(centerX, centerY, radius, 0, angulo1);
-            ctx.closePath();
-            ctx.fillStyle = '#A6B985';
-            ctx.fill();
-            
-            // Fatia 2 - Girar Freebet
-            ctx.beginPath();
-            ctx.moveTo(centerX, centerY);
-            ctx.arc(centerX, centerY, radius, angulo1, angulo1 + angulo2);
-            ctx.closePath();
-            ctx.fillStyle = '#648A64';
-            ctx.fill();
-            
-            // Borda
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-            ctx.strokeStyle = '#A6B985';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        }
-        
-        function calcularFreebetLay() {
-            const oddCasa = parseFloat(document.getElementById('fl-odd-casa').value);
-            const oddLay = parseFloat(document.getElementById('fl-odd-lay').value);
-            const valorFreebet = parseFloat(document.getElementById('fl-valor-freebet').value);
-            const comissao = parseFloat(document.getElementById('fl-comissao').value) / 100;
-            
-            const valorApostar = (valorFreebet * (oddCasa - 1)) / (oddLay - comissao);
-            const responsabilidade = valorApostar * (oddLay - 1);
-            const lucro = (valorFreebet * (oddCasa - 1)) - responsabilidade;
-            const percentual = (lucro / valorFreebet) * 100;
-            
-            document.getElementById('fl-valor-apostar').textContent = formatarMoeda(valorApostar);
-            document.getElementById('fl-responsabilidade').textContent = formatarMoeda(responsabilidade);
-            document.getElementById('fl-lucro').textContent = formatarMoeda(lucro);
-            
-            // Sistema intuitivo para o percentual
-            let percentualDisplay = '';
-            let statusClass = '';
-            
-            if (percentual < 60) {
-                percentualDisplay = `<span class="emoji-pulse">🔴</span> ${formatarPercentual(percentual)} - RUIM`;
-                statusClass = 'status-ruim';
-            } else if (percentual >= 60 && percentual <= 70) {
-                percentualDisplay = `<span class="emoji-pulse">🟡</span> ${formatarPercentual(percentual)} - ACEITÁVEL`;
-                statusClass = 'status-aceitavel';
-            } else {
-                percentualDisplay = `<span class="emoji-pulse">🟢</span> ${formatarPercentual(percentual)} - MUITO BOM`;
-                statusClass = 'status-muito-bom';
-            }
-            
-            const percentualElement = document.getElementById('fl-percentual');
-            percentualElement.innerHTML = percentualDisplay;
-            percentualElement.className = `result-value ${statusClass}`;
-            
-            document.getElementById('fl-results').style.display = 'block';
-        }
-        
-        function calcularLayTradicional() {
-            const oddCasa = parseFloat(document.getElementById('lt-odd-casa').value);
-            const oddLay = parseFloat(document.getElementById('lt-odd-lay').value);
-            const aposta = parseFloat(document.getElementById('lt-aposta').value);
-            const comissao = parseFloat(document.getElementById('lt-comissao').value) / 100;
-            
-            const valorApostar = (aposta * oddCasa) / (oddLay - comissao);
-            const responsabilidade = valorApostar * (oddLay - 1);
-            const lucro = (aposta * (oddCasa - 1)) - responsabilidade;
-            
-            document.getElementById('lt-valor-apostar').textContent = formatarMoeda(valorApostar);
-            document.getElementById('lt-responsabilidade').textContent = formatarMoeda(responsabilidade);
-            document.getElementById('lt-lucro').textContent = formatarMoeda(lucro);
-            
-            document.getElementById('lt-results').style.display = 'block';
-        }
-        
-        function calcularOddAumento() {
-            const oddNormal = parseFloat(document.getElementById('oa-odd-normal').value);
-            const aumento = parseFloat(document.getElementById('oa-aumento').value);
-            
-            // Fórmula do Excel: =((100 * C31 - 100) + (100 * C31 - 100) * C32 + 100) / 100
-            const percentualDecimal = aumento / 100;
-            const oddFinal = ((100 * oddNormal - 100) + (100 * oddNormal - 100) * percentualDecimal + 100) / 100;
-            
-            document.getElementById('oa-odd-final').textContent = oddFinal.toFixed(3);
-            document.getElementById('oa-percent-display').textContent = aumento + '%';
-            document.getElementById('oa-odd-display').textContent = oddNormal;
-            document.getElementById('oa-final-display').textContent = oddFinal.toFixed(3);
-            
-            document.getElementById('oa-results').style.display = 'block';
-        }
-    </script>
+      }
+    });
+
+    if (updated) houses = newHouses;
+
+    calculateResults(activeHouses());
+    render();
+  }
+
+  function renderTop() {
+    const totalInvestido = fmtMoney(results.totalStake);
+    const roiClass = results.roi >= 0 ? "text-green-400" : "text-red-400";
+    const roiText = (results.roi >= 0 ? "+" : "") + results.roi.toFixed(2) + "%";
+
+    return `
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        <div class="bg-gray-900/40 backdrop-blur-md rounded-xl p-3 border border-cyan-500/20 shadow-lg shadow-cyan-500/10">
+          <h2 class="text-cyan-400 text-sm mb-2 font-bold uppercase tracking-wider text-center">Configurações</h2>
+          <label class="text-cyan-200 mb-1 block text-xs">Número de Casas:</label>
+          <select id="numHouses" class="flex h-8 w-full rounded-lg bg-gray-900/50 border border-cyan-500/30 text-cyan-100 px-3 text-xs shadow-lg backdrop-blur-sm transition-all duration-200 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none hover:border-cyan-400/50">
+            <option value="2" ${numHouses===2?'selected':''}>2 Casas</option>
+            <option value="3" ${numHouses===3?'selected':''}>3 Casas</option>
+            <option value="4" ${numHouses===4?'selected':''}>4 Casas</option>
+            <option value="5" ${numHouses===5?'selected':''}>5 Casas</option>
+          </select>
+        </div>
+
+        <div class="bg-gray-900/40 backdrop-blur-md rounded-xl p-3 border border-cyan-500/20 shadow-lg shadow-cyan-500/10">
+          <h2 class="text-cyan-400 text-sm mb-2 font-bold uppercase tracking-wider text-center">Arredondamento</h2>
+          <label class="text-cyan-200 mb-1 block text-xs">Stakes Para:</label>
+          <select id="rounding" class="flex h-8 w-full rounded-lg bg-gray-900/50 border border-cyan-500/30 text-cyan-100 px-3 text-xs shadow-lg backdrop-blur-sm transition-all duration-200 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none hover:border-cyan-400/50">
+            <option value="0.01" ${displayRounding==="0.01"?'selected':''}>R$ 0,01</option>
+            <option value="0.10" ${displayRounding==="0.10"?'selected':''}>R$ 0,10</option>
+            <option value="0.50" ${displayRounding==="0.50"?'selected':''}>R$ 0,50</option>
+            <option value="1.00" ${displayRounding==="1.00"?'selected':''}>R$ 1,00</option>
+          </select>
+        </div>
+
+        <div class="bg-gray-900/40 backdrop-blur-md rounded-xl p-3 border border-cyan-500/20 shadow-lg shadow-cyan-500/10 text-center">
+          <h2 class="text-cyan-400 text-sm mb-2 font-bold uppercase tracking-wider">Total Investido</h2>
+          <div id="totalStake" class="text-lg text-cyan-100 font-bold font-mono">${fmtMoney(results.totalStake)}</div>
+        </div>
+
+        <div class="bg-gray-900/40 backdrop-blur-md rounded-xl p-3 border border-cyan-500/20 shadow-lg shadow-cyan-500/10 text-center">
+          <h2 class="text-cyan-400 text-sm mb-2 font-bold uppercase tracking-wider">ROI Médio</h2>
+          <div id="roi" class="text-lg font-bold font-mono ${roiClass}">${roiText}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function HouseCard(idx, h) {
+    const oddDisplay = toFixed2(h.finalOdd || 0);
+    const stakeVal = toFixed2(parseFloat(h.stake)||0);
+    const respVal = h.lay ? toFixed2(parseFloat(h.responsibility)||0) : "";
+
+    return `
+      <div class="bg-gray-900/40 backdrop-blur-md rounded-xl p-3 border border-cyan-500/20 shadow-lg shadow-cyan-500/10 hover:shadow-cyan-500/15 hover:border-cyan-400/30 transition-all duration-300 h-full">
+        <h3 class="text-cyan-400 text-sm mb-2 font-bold uppercase tracking-wider text-center">Casa ${idx + 1}</h3>
+        <div class="space-y-2">
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-cyan-200 mb-1 block text-xs" for="odd-${idx}">Odd</label>
+              <input id="odd-${idx}" data-action="odd" data-idx="${idx}" type="number" min="1" step="0.01" value="${h.odd}"
+                class="flex h-8 w-full rounded-lg bg-gray-900/50 border border-cyan-500/30 text-cyan-100 px-3 text-xs shadow-lg backdrop-blur-sm transition-all duration-200 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none hover:border-cyan-400/50 placeholder:text-cyan-300/50" />
+            </div>
+            <div>
+              <label class="text-cyan-200 mb-1 block text-xs">Odd Final</label>
+              <div class="h-8 flex items-center px-3 bg-gray-800/60 border border-cyan-500/20 rounded-lg text-xs text-cyan-100 font-mono">${oddDisplay}</div>
+            </div>
+          </div>
+
+          ${h.lay ? `
+          <div>
+            <label class="text-cyan-200 mb-1 block text-xs" for="responsibility-${idx}">Responsabilidade</label>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-300 text-xs font-bold">R$</span>
+              <input id="responsibility-${idx}" data-action="responsibility" data-idx="${idx}" type="number" min="0" step="0.01" value="${respVal}"
+                class="pl-10 flex h-8 w-full rounded-lg bg-gray-900/50 border border-cyan-500/30 text-cyan-100 px-3 text-xs shadow-lg backdrop-blur-sm transition-all duration-200 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none hover:border-cyan-400/50 placeholder:text-cyan-300/50 font-mono" />
+            </div>
+          </div>` : ``}
+
+          <div>
+            <label class="text-cyan-200 mb-1 block text-xs" for="stake-${idx}">Stake</label>
+            <div class="flex gap-2">
+              <div class="relative flex-1">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-300 text-xs font-bold">R$</span>
+                <input id="stake-${idx}" data-action="stake" data-idx="${idx}" type="number" min="0" step="0.01" value="${stakeVal}"
+                  class="pl-10 flex h-8 w-full rounded-lg bg-gray-900/50 border border-cyan-500/30 text-cyan-100 px-3 text-xs shadow-lg backdrop-blur-sm transition-all duration-200 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none hover:border-cyan-400/50 placeholder:text-cyan-300/50 font-mono" />
+              </div>
+              <button data-action="toggleLay" data-idx="${idx}"
+                class="${h.lay ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-gradient-to-r from-cyan-500 to-blue-500'} text-white shadow-lg ${h.lay ? 'shadow-purple-500/25' : 'shadow-cyan-500/25'} hover:shadow-cyan-500/40 hover:scale-105 active:scale-95 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-xs font-black h-8 px-3 uppercase tracking-wider">
+                ${h.lay ? 'L' : 'B'}
+              </button>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-3">
+            <label class="flex items-center space-x-2 text-cyan-200 text-xs normal-case cursor-pointer select-none">
+              <input type="checkbox" ${h.commission !== null ? 'checked' : ''} data-action="toggleCommission" data-idx="${idx}"
+                class="h-5 w-5 rounded border-2 border-cyan-400/50 bg-gray-900/50 text-cyan-400 shadow-lg focus:ring-2 focus:ring-cyan-400/30 focus:ring-offset-0 transition-all duration-200 cursor-pointer accent-cyan-400" />
+              <span>Comissão</span>
+            </label>
+            <label class="flex items-center space-x-2 text-cyan-200 text-xs normal-case cursor-pointer select-none">
+              <input type="checkbox" ${h.freebet ? 'checked' : ''} data-action="toggleFreebet" data-idx="${idx}"
+                class="h-5 w-5 rounded border-2 border-cyan-400/50 bg-gray-900/50 text-cyan-400 shadow-lg focus:ring-2 focus:ring-cyan-400/30 focus:ring-offset-0 transition-all duration-200 cursor-pointer accent-cyan-400" />
+              <span>Freebet</span>
+            </label>
+          </div>
+
+          ${h.commission !== null ? `
+          <div>
+            <label class="text-cyan-200 text-xs mb-1 block" for="commission-${idx}">Comissão (%)</label>
+            <div class="relative">
+              <input id="commission-${idx}" data-action="commissionValue" data-idx="${idx}" type="number" min="0" max="100" step="0.1" value="${h.commission === 0 ? '' : h.commission}"
+                class="flex h-8 w-full rounded-lg bg-gray-900/50 border border-cyan-500/30 text-cyan-100 px-3 text-xs shadow-lg backdrop-blur-sm transition-all duration-200 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none hover:border-cyan-400/50 placeholder:text-cyan-300/50 font-mono pr-10" />
+              <span class="absolute right-3 top-1/2 -translate-y-1/2 text-cyan-300 text-xs font-bold">%</span>
+            </div>
+          </div>` : ``}
+
+          <button data-action="fixStake" data-idx="${idx}"
+            class="w-full h-8 text-xs font-bold uppercase tracking-wider rounded-lg ${h.fixedStake ? 'bg-gradient-to-r from-green-500 to-emerald-500 shadow-green-500/25' : 'bg-gradient-to-r from-gray-600 to-gray-700 shadow-gray-600/25'}">
+            ${h.fixedStake ? 'Stake Fixa' : 'Fixar Stake'}
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderHouses() {
+    const list = activeHouses().map((h, idx) => HouseCard(idx, h)).join("");
+    return `<div id="houses" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">${list}</div>`;
+  }
+
+  function renderResults() {
+    const active = activeHouses();
+    const anyLay = active.some(h => h.lay);
+    const headerCols = anyLay ? "grid-cols-5 gap-3" : "grid-cols-4 gap-3";
+
+    const header = `
+      <div class="${cn('grid text-cyan-100 p-3 border-b border-cyan-500/20 font-bold text-xs whitespace-nowrap min-w-max uppercase tracking-wider', headerCols)}">
+        <div class="min-w-16 text-center">CASA</div>
+        <div class="min-w-16 text-center">ODD</div>
+        <div class="min-w-20 text-center">STAKE</div>
+        ${anyLay ? '<div class="min-w-24 text-center">RESP.</div>' : ''}
+        <div class="min-w-20 text-center">LUCRO</div>
+      </div>
+    `;
+
+    const rows = active.map((h, idx) => {
+      const oddText = h.freebet ? toFixed2(parseFloat(h.odd || 0)) : toFixed2(h.finalOdd || 0);
+      const stakeText = toFixed2(parseFloat(h.stake || "0"));
+      const profit = results.profits[idx] || 0;
+      const profitPos = profit >= 0;
+      return `
+        <div class="${cn('grid p-3 border-b border-cyan-500/10 text-xs whitespace-nowrap min-w-max hover:bg-cyan-500/5 transition-colors duration-200', headerCols)}">
+          <div class="text-cyan-200 min-w-16 text-center font-medium">Casa ${idx + 1}</div>
+          <div class="text-cyan-100 min-w-16 text-center font-mono">${oddText}</div>
+          <div class="text-cyan-100 min-w-20 text-center font-mono flex items-center justify-center gap-1">R$ ${stakeText}${h.freebet ? '<span class="text-yellow-400 text-[10px]">(Freebet)</span>' : ''}</div>
+          ${anyLay ? `<div class="text-cyan-100 min-w-24 text-center font-mono">${h.lay ? fmtMoney(parseFloat(h.responsibility)||0) : '-'}</div>` : ''}
+          <div class="min-w-20 text-center font-mono font-bold ${profitPos ? 'text-green-400' : 'text-red-400'}">${profitPos ? '' : '-'}${fmtMoney(Math.abs(profit))}</div>
+        </div>
+      `;
+    }).join("");
+
+    return `
+      <div class="bg-gray-900/40 backdrop-blur-md rounded-xl p-4 border border-cyan-500/20 shadow-lg shadow-cyan-500/10 mt-4">
+        <h2 class="text-cyan-400 text-lg mb-4 font-bold uppercase tracking-wider text-center">Resultados</h2>
+        <div class="bg-gray-800/50 rounded-lg overflow-x-auto border border-cyan-500/30 shadow-inner">
+          ${header}
+          ${rows}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderTop() {
+    const totalInvestido = fmtMoney(results.totalStake);
+    const roiClass = results.roi >= 0 ? "text-green-400" : "text-red-400";
+    const roiText = (results.roi >= 0 ? "+" : "") + results.roi.toFixed(2) + "%";
+
+    return `
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        <div class="bg-gray-900/40 backdrop-blur-md rounded-xl p-3 border border-cyan-500/20 shadow-lg shadow-cyan-500/10">
+          <h2 class="text-cyan-400 text-sm mb-2 font-bold uppercase tracking-wider text-center">Configurações</h2>
+          <label class="text-cyan-200 mb-1 block text-xs">Número de Casas:</label>
+          <select id="numHouses" class="flex h-8 w-full rounded-lg bg-gray-900/50 border border-cyan-500/30 text-cyan-100 px-3 text-xs shadow-lg backdrop-blur-sm transition-all duration-200 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none hover:border-cyan-400/50">
+            <option value="2" ${numHouses===2?'selected':''}>2 Casas</option>
+            <option value="3" ${numHouses===3?'selected':''}>3 Casas</option>
+            <option value="4" ${numHouses===4?'selected':''}>4 Casas</option>
+            <option value="5" ${numHouses===5?'selected':''}>5 Casas</option>
+          </select>
+        </div>
+
+        <div class="bg-gray-900/40 backdrop-blur-md rounded-xl p-3 border border-cyan-500/20 shadow-lg shadow-cyan-500/10">
+          <h2 class="text-cyan-400 text-sm mb-2 font-bold uppercase tracking-wider text-center">Arredondamento</h2>
+          <label class="text-cyan-200 mb-1 block text-xs">Stakes Para:</label>
+          <select id="rounding" class="flex h-8 w-full rounded-lg bg-gray-900/50 border border-cyan-500/30 text-cyan-100 px-3 text-xs shadow-lg backdrop-blur-sm transition-all duration-200 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 focus:outline-none hover:border-cyan-400/50">
+            <option value="0.01" ${displayRounding==="0.01"?'selected':''}>R$ 0,01</option>
+            <option value="0.10" ${displayRounding==="0.10"?'selected':''}>R$ 0,10</option>
+            <option value="0.50" ${displayRounding==="0.50"?'selected':''}>R$ 0,50</option>
+            <option value="1.00" ${displayRounding==="1.00"?'selected':''}>R$ 1,00</option>
+          </select>
+        </div>
+
+        <div class="bg-gray-900/40 backdrop-blur-md rounded-xl p-3 border border-cyan-500/20 shadow-lg shadow-cyan-500/10 text-center">
+          <h2 class="text-cyan-400 text-sm mb-2 font-bold uppercase tracking-wider">Total Investido</h2>
+          <div id="totalStake" class="text-lg text-cyan-100 font-bold font-mono">${fmtMoney(results.totalStake)}</div>
+        </div>
+
+        <div class="bg-gray-900/40 backdrop-blur-md rounded-xl p-3 border border-cyan-500/20 shadow-lg shadow-cyan-500/10 text-center">
+          <h2 class="text-cyan-400 text-sm mb-2 font-bold uppercase tracking-wider">ROI Médio</h2>
+          <div id="roi" class="text-lg font-bold font-mono ${results.roi >= 0 ? 'text-green-400' : 'text-red-400'}">${(results.roi >= 0 ? '+' : '') + results.roi.toFixed(2)}%</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function render() {
+    const app = document.getElementById("app");
+    app.innerHTML = `
+      ${renderTop()}
+      ${renderHouses()}
+      ${renderResults()}
+    `;
+
+    document.getElementById("numHouses").addEventListener("change", (e) => {
+      numHouses = parseInt(e.target.value, 10);
+      render();
+    });
+    document.getElementById("rounding").addEventListener("change", (e) => {
+      displayRounding = e.target.value;
+      roundingValue = parseFloat(displayRounding);
+      recalc();
+    });
+
+    const grid = document.getElementById("houses");
+    grid.querySelectorAll("[data-action]").forEach(el => {
+      const action = el.getAttribute("data-action");
+      const idx = parseInt(el.getAttribute("data-idx"), 10);
+
+      if (action === "odd") {
+        el.addEventListener("input", (e) => setHouse(idx, { odd: e.target.value }, ["odd"]));
+      } else if (action === "stake") {
+        el.addEventListener("input", (e) => setHouse(idx, { stake: e.target.value }, ["stake"]));
+      } else if (action === "responsibility") {
+        el.addEventListener("input", (e) => setHouse(idx, { responsibility: e.target.value }, ["responsibility"]));
+      } else if (action === "toggleLay") {
+        el.addEventListener("click", () => setHouse(idx, { lay: !houses[idx].lay }));
+      } else if (action === "toggleCommission") {
+        el.addEventListener("change", (e) => setHouse(idx, { commission: e.target.checked ? 0 : null }, ["commission"]));
+      } else if (action === "commissionValue") {
+        el.addEventListener("input", (e) => {
+          const val = e.target.value;
+          if (val === "") setHouse(idx, { commission: 0 }, ["commission"]);
+          else {
+            const num = parseFloat(val);
+            if (Number.isFinite(num)) setHouse(idx, { commission: num }, ["commission"]);
+          }
+        });
+        el.addEventListener("blur", (e) => { if (e.target.value === "") setHouse(idx, { commission: 0 }, ["commission"]); });
+      } else if (action === "toggleFreebet") {
+        el.addEventListener("change", (e) => setHouse(idx, { freebet: e.target.checked }));
+      } else if (action === "fixStake") {
+        el.addEventListener("click", () => fixStake(idx));
+      }
+    });
+  }
+
+  function renderHouses() {
+    const list = activeHouses().map((h, idx) => HouseCard(idx, h)).join("");
+    return `<div id="houses" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">${list}</div>`;
+  }
+
+  recalc(); // triggers render
+})();
+</script>
+
 </body>
 </html>

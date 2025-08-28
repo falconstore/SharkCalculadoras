@@ -1,0 +1,153 @@
+
+/* Tema base (cyan) e presets via [data-theme="..."] */
+:root, [data-theme="cyan"] {
+  color-scheme: dark;
+  --bg1: #06070b;
+  --bg2: #0f172a;
+  --bg3: #0b2742;
+  --bg4: #0f3460;
+  --text: #e6f7ff;
+  --muted: #aee4ff;
+  --card: rgba(17, 24, 39, 0.55);
+  --border: rgba(34, 211, 238, 0.25);
+  --accent: #22d3ee;
+  --accent2: #60a5fa;
+  --success: #34d399;
+  --danger: #f87171;
+}
+
+/* Emerald */
+[data-theme="emerald"] {
+  --bg1: #03100c;
+  --bg2: #05201a;
+  --bg3: #083227;
+  --bg4: #0b4234;
+  --text: #eafff7;
+  --muted: #b9f5df;
+  --card: rgba(7, 25, 20, .6);
+  --border: rgba(16, 185, 129, 0.28);
+  --accent: #10b981;
+  --accent2: #34d399;
+  --success: #22c55e;
+  --danger: #f87171;
+}
+
+/* Sunset */
+[data-theme="sunset"] {
+  --bg1: #1a0b0b;
+  --bg2: #2b0f21;
+  --bg3: #3a1432;
+  --bg4: #4b173f;
+  --text: #fff5f2;
+  --muted: #ffd9cf;
+  --card: rgba(43, 15, 33, .55);
+  --border: rgba(244, 114, 182, 0.32);
+  --accent: #fb923c;   /* laranja */
+  --accent2: #f472b6;  /* pink */
+  --success: #34d399;
+  --danger: #fb7185;
+}
+
+/* Violet */
+[data-theme="violet"] {
+  --bg1: #0c0514;
+  --bg2: #130a23;
+  --bg3: #1b1033;
+  --bg4: #241748;
+  --text: #f3efff;
+  --muted: #d8ccff;
+  --card: rgba(18, 10, 35, .6);
+  --border: rgba(99, 102, 241, 0.32);
+  --accent: #a78bfa;   /* purple */
+  --accent2: #6366f1;  /* indigo */
+  --success: #34d399;
+  --danger: #f87171;
+}
+
+/* Slate */
+[data-theme="slate"] {
+  --bg1: #05060a;
+  --bg2: #0a0c12;
+  --bg3: #111827;
+  --bg4: #1f2937;
+  --text: #e6eef7;
+  --muted: #c3d3e6;
+  --card: rgba(17, 24, 39, 0.6);
+  --border: rgba(148, 163, 184, 0.28);
+  --accent: #38bdf8;   /* sky */
+  --accent2: #22d3ee;  /* cyan */
+  --success: #22c55e;
+  --danger: #ef4444;
+}
+
+/* Base UI */
+body {
+  background: linear-gradient(135deg, var(--bg1) 0%, var(--bg2) 25%, var(--bg3) 50%, var(--bg4) 100%);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, 'Helvetica Neue', Arial, 'Noto Sans';
+}
+
+.tab {
+  padding: 10px 14px;
+  font-weight: 800;
+  border-radius: 10px 10px 0 0;
+  border: 1px solid transparent;
+  cursor: pointer;
+  color: var(--muted);
+  background: transparent;
+}
+.tab[aria-selected="true"] {
+  background: color-mix(in oklab, var(--accent) 18%, transparent);
+  color: var(--text);
+  border-color: var(--border);
+  border-bottom-color: transparent;
+}
+.panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+input, select, textarea {
+  background: color-mix(in oklab, #000 35%, var(--bg2));
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  outline: none;
+}
+input:focus, select:focus, textarea:focus {
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 28%, transparent);
+  border-color: color-mix(in oklab, var(--accent) 50%, transparent);
+}
+
+button, .btn {
+  background-image: linear-gradient(90deg, var(--accent), var(--accent2));
+  color: #fff;
+  border: 0;
+  border-radius: 10px;
+  font-weight: 800;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+button:hover, .btn:hover { filter: brightness(1.05); }
+
+.table-like { width: 100%; border-collapse: collapse; }
+.table-like th, .table-like td { border-bottom: 1px solid var(--border); padding: 8px 10px; }
+
+/* Utilidades */
+.center { text-align: center; }
+
+/* === Shark theme utilities (fix Emerald across both calculators) === */
+.text-accent { color: var(--accent) !important; }
+.text-strong { color: var(--text) !important; }
+.text-soft   { color: var(--muted) !important; }
+
+.bg-card { background: var(--card) !important; border: 1px solid var(--border) !important; border-radius: 12px !important; }
+.box     { background: color-mix(in oklab, #000 35%, var(--bg2)) !important; border: 1px solid var(--border) !important; border-radius: 8px !important; color: var(--text) !important; }
+
+.btn { background-image: linear-gradient(90deg, var(--accent), var(--accent2)) !important; color: #fff !important; border: 0 !important; border-radius: 10px !important; font-weight: 800 !important; padding: 8px 14px !important; cursor: pointer; }
+
+/* Checkbox/radio usam a cor do tema */
+input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
+

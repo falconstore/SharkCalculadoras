@@ -27,8 +27,8 @@
 
     <section id="panel-2" role="tabpanel" aria-labelledby="tabBtn2" hidden>
       <div class="panel p-3 shadow-lg">
-        <h2 class="text-accent text-lg font-bold uppercase tracking-wider mb-3 center"></h2>
-        <iframe id="calc2frame" title="" class="w-full border rounded-lg shadow-lg" style="min-height: 1200px; background: transparent;"></iframe>
+        <h2 class="text-accent text-lg font-bold uppercase tracking-wider mb-3 center">Calculadora Shark 2</h2>
+        <iframe id="calc2frame" title="Calculadora Shark 2" class="w-full border rounded-lg shadow-lg" style="min-height: 1200px; background: transparent;"></iframe>
       </div>
     </section>
   </div>
@@ -124,7 +124,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title></title>
+  <title>Calculadora Promo Freebet</title>
   <style>
     :root{--bg:#0b0f14;--card:#10161d;--muted:#8aa0b2;--fg:#e8f0ff;--accent:#32d583;--border:#1f2a36}
     *{box-sizing:border-box}
@@ -233,7 +233,9 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 <body>
   <div class="wrap">
     <h1>Calculadora Promo Freebet</h1>
-       <!-- Nº de Entradas -->
+    <div class="sub">Casa Promo paga <b>freebet</b> apenas se a <b>Entrada 1</b> perder. Selecione N (2–6) e preencha as coberturas. Tabela final: Cenário | Odd | Apostar | Lucro Final.</div>
+
+    <!-- Nº de Entradas -->
     <div class="card">
       <label>Entradas (mercados)</label>
       <select id="numEntradas">
@@ -534,7 +536,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
     doc.open(); doc.write(CALC2_HTML); doc.close();
     doc.documentElement.setAttribute('data-theme', 'emerald');
 
-    // Injetar tema
+    // Injetar tema + alinhamentos e harmonização de bordas
     const style = doc.createElement('style');
     style.textContent = THEME_CSS + `
       html, body { background: transparent !important; color-scheme: dark; }
@@ -543,7 +545,8 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
       .shark-card { background: var(--card) !important; border: 1px solid var(--border) !important; border-radius: 12px !important; }
       input, select, textarea { background: rgba(3,16,12,.35) !important; color: var(--text) !important; border-color: var(--border) !important; }
       button, .btn { background-image: linear-gradient(90deg, var(--accent), var(--accent2)) !important; color: #fff !important; border: 0 !important; border-radius: 10px !important; font-weight: 800 !important; }
-      /* Alinhamento Lay */
+      .shark-theme *, .shark-theme *::before, .shark-theme *::after { border-color: var(--border) !important; }
+      /* Checkbox Lay */
       .shark-theme label > input[type="checkbox"], .shark-theme input[type="checkbox"] { width:18px; height:18px; margin:0 6px 0 0; vertical-align:middle; }
     `;
     (doc.head || doc.documentElement).appendChild(style);
@@ -558,8 +561,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
     // Cartões
     Array.from(doc.querySelectorAll('section, .card, .box, .container, .panel')).forEach(el => el.classList.add('shark-card'));
 
-    
-    // Limpeza da faixa inicial: remove o bloco com o texto de instrução e sua borda
+    // Limpa o bloco de instruções inicial (texto e contêiner com borda)
     try {
       const matchText = "Casa Promo paga freebet";
       const cand = Array.from(doc.querySelectorAll('h1,h2,h3,h4,p,div,span,small,strong,em'))
@@ -575,8 +577,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
         }
         (box || cand).style.display = 'none';
       }
-    } catch {}
-
+    } catch { }
 
     iframe.dataset.loaded = "1";
   }
@@ -623,7 +624,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
     const rounded = Math.round(num / roundingValue) * roundingValue;
     return fmtDec(rounded);
   };
-  const activeHouses = () => houses.slice(0, numHouses);
+  const activeHouses = () => houses.slice(0, numHOUSES = numHouses);
 
   let pending = false;
   function scheduleUpdate() {
@@ -798,9 +799,10 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
       <div class="panel p-4 shadow-lg mt-4">
         <h2 class="text-accent text-lg mb-4 font-bold uppercase tracking-wider text-center">Resultados</h2>
         <div class="bg-card rounded-lg overflow-x-auto shadow-inner">
-          <div id="resultsHeader" class="grid text-strong p-3 border-b font-bold text-xs whitespace-nowrap min-w-max uppercase tracking-wider grid-cols-4 gap-3">
+          <div id="resultsHeader" class="grid text-strong p-3 border-b font-bold text-xs whitespace-nowrap min-w-max uppercase tracking-wider grid-cols-5 gap-3">
             <div class="min-w-16 text-center">CASA</div>
             <div class="min-w-16 text-center">ODD</div>
+            <div class="min-w-16 text-center">COMISSÃO</div>
             <div class="min-w-20 text-center">STAKE</div>
             <div class="min-w-20 text-center">LUCRO</div>
           </div>
@@ -818,11 +820,12 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 
     const active = activeHouses();
     const anyLay = active.some(h => h.lay);
-    const headerCols = anyLay ? "grid-cols-5 gap-3" : "grid-cols-4 gap-3";
+    const headerCols = anyLay ? "grid-cols-6 gap-3" : "grid-cols-5 gap-3";
     const header = `
       <div class="grid text-strong p-3 border-b font-bold text-xs whitespace-nowrap min-w-max uppercase tracking-wider ${headerCols}">
         <div class="min-w-16 text-center">CASA</div>
         <div class="min-w-16 text-center">ODD</div>
+        <div class="min-w-16 text-center">COMISSÃO</div>
         <div class="min-w-20 text-center">STAKE</div>
         ${anyLay ? '<div class="min-w-24 text-center">RESP.</div>' : ''}
         <div class="min-w-20 text-center">LUCRO</div>
@@ -833,6 +836,9 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
     const rowsHTML = active.map((h, idx) => {
       const oddText = h.freebet ? toFixed2(parseFlex(h.odd) || 0).replace('.', ',')
                                 : toFixed2(h.finalOdd || 0).replace('.', ',');
+      const commissionText = (h.commission === null)
+        ? '—'
+        : ((Number.isFinite(h.commission) ? h.commission : 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' %');
       const stakeText = h.stake ? h.stake : "0,00";
       const profit = results.profits[idx] || 0;
       const profitPos = profit >= 0;
@@ -840,7 +846,10 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
         <div class="grid p-3 border-b text-xs whitespace-nowrap min-w-max ${headerCols}">
           <div class="text-soft min-w-16 text-center font-medium">Casa ${idx + 1}</div>
           <div class="text-strong min-w-16 text-center font-mono">${oddText}</div>
-          <div class="text-strong min-w-20 text-center font-mono flex items-center justify-center gap-1">R$ ${stakeText}${h.freebet ? '<span class="text-yellow-400 text-[10px]">(Freebet)</span>' : ''}</div>
+          <div class="text-strong min-w-16 text-center font-mono">${commissionText}</div>
+          <div class="text-strong min-w-20 text-center font-mono flex items-center justify-center gap-1">
+            R$ ${stakeText}${h.freebet ? '<span class="text-yellow-400 text-[10px]">(Freebet)</span>' : ''}
+          </div>
           ${anyLay ? `<div class="text-strong min-w-24 text-center font-mono">${h.lay ? fmtBRL(parseFlex(h.responsibility)||0) : '-'}</div>` : ''}
           <div class="min-w-20 text-center font-mono font-bold ${profitPos ? 'text-green-400' : 'text-red-400'}">${profitPos ? '' : '-'}${fmtBRL(Math.abs(profit))}</div>
         </div>

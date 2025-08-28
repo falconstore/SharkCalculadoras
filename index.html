@@ -19,7 +19,6 @@
 <script>
 (() => {
   const $ = (sel, root=document) => root.querySelector(sel);
-  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
   function parseFlex(n) {
     if (n === null || n === undefined) return NaN;
@@ -66,6 +65,7 @@
   };
   const activeHouses = () => houses.slice(0, numHouses);
 
+  // ---------- cálculo ----------
   function calculateResults(active) {
     let totalStake = 0;
     const profits = new Array(active.length).fill(0);
@@ -103,62 +103,6 @@
     results = { profits, totalStake, roi };
   }
 
-  // ---- UI helpers ----
-  function updateCardComputed(idx) {
-    const h = houses[idx];
-    const oddEl = document.getElementById(`finalOdd-${idx}`);
-    if (oddEl) oddEl.textContent = toFixed2(h.finalOdd || 0).replace('.', ',');
-    if (h.lay && !(manualOverrides[idx] && manualOverrides[idx].responsibility)) {
-      const rEl = document.getElementById(`responsibility-${idx}`);
-      if (rEl) rEl.value = h.responsibility || "";
-    }
-    if (!(manualOverrides[idx] && manualOverrides[idx].stake)) {
-      const sEl = document.getElementById(`stake-${idx}`);
-      if (sEl) sEl.value = h.stake || "";
-    }
-  }
-  function updateAllHouseUIs(){ activeHouses().forEach((_,i)=>updateCardComputed(i)); }
-
-  function updateResultsUI() {
-    $("#totalStake").textContent = fmtBRL(results.totalStake);
-    const roiEl = $("#roi");
-    roiEl.textContent = (results.roi >= 0 ? "+" : "") + results.roi.toFixed(2) + "%";
-    roiEl.className = "text-lg font-bold font-mono " + (results.roi >= 0 ? "text-green-400" : "text-red-400");
-
-    const active = activeHouses();
-    const anyLay = active.some(h => h.lay);
-    const headerCols = anyLay ? "grid-cols-5 gap-3" : "grid-cols-4 gap-3";
-    const header = `
-      <div class="grid text-cyan-100 p-3 border-b border-cyan-500/20 font-bold text-xs whitespace-nowrap min-w-max uppercase tracking-wider ${headerCols}">
-        <div class="min-w-16 text-center">CASA</div>
-        <div class="min-w-16 text-center">ODD</div>
-        <div class="min-w-20 text-center">STAKE</div>
-        ${anyLay ? '<div class="min-w-24 text-center">RESP.</div>' : ''}
-        <div class="min-w-20 text-center">LUCRO</div>
-      </div>
-    `;
-    $("#resultsHeader").outerHTML = header.replace('<div class="grid', '<div id="resultsHeader" class="grid');
-
-    const rowsHTML = active.map((h, idx) => {
-      const oddText = h.freebet ? toFixed2(parseFlex(h.odd) || 0).replace('.', ',')
-                                : toFixed2(h.finalOdd || 0).replace('.', ',');
-      const stakeText = h.stake ? h.stake : "0,00";
-      const profit = results.profits[idx] || 0;
-      const profitPos = profit >= 0;
-      return `
-        <div class="grid p-3 border-b border-cyan-500/10 text-xs whitespace-nowrap min-w-max hover:bg-cyan-500/5 transition-colors duration-200 ${headerCols}">
-          <div class="text-cyan-200 min-w-16 text-center font-medium">Casa ${idx + 1}</div>
-          <div class="text-cyan-100 min-w-16 text-center font-mono">${oddText}</div>
-          <div class="text-cyan-100 min-w-20 text-center font-mono flex items-center justify-center gap-1">R$ ${stakeText}${h.freebet ? '<span class="text-yellow-400 text-[10px]">(Freebet)</span>' : ''}</div>
-          ${anyLay ? `<div class="text-cyan-100 min-w-24 text-center font-mono">${h.lay ? fmtBRL(parseFlex(h.responsibility)||0) : '-'}</div>` : ''}
-          <div class="min-w-20 text-center font-mono font-bold ${profitPos ? 'text-green-400' : 'text-red-400'}">${profitPos ? '' : '-'}${fmtBRL(Math.abs(profit))}</div>
-        </div>
-      `;
-    }).join("");
-    $("#resultsRows").innerHTML = rowsHTML;
-  }
-
-  // ---- distribuição (FIX AQUI) ----
   function recalcStakeDistribution() {
     const active = activeHouses();
     const fixedIndex = active.findIndex(h => h.fixedStake);
@@ -216,12 +160,11 @@
 
     if (changed) {
       houses = newHouses;
-      // >>>>>>>>>>>>>>>>> FIX: refletir também nos inputs dos cards
       updateAllHouseUIs();
     }
   }
 
-  // ---- eventos / render ----
+  // ---------- UI ----------
   function cardHTML(idx, h) {
     const oddDisplay = toFixed2(h.finalOdd || 0).replace('.', ',');
     return `
@@ -297,9 +240,8 @@
     `;
   }
 
-  function renderHouses() {
-    const list = activeHouses().map((h, idx) => cardHTML(idx, h)).join("");
-    return `<div id="houses" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">${list}</div>`;
+  function housesInnerHTML() {
+    return activeHouses().map((h, idx) => cardHTML(idx, h)).join("");
   }
 
   function renderTop() {
@@ -357,15 +299,74 @@
     `;
   }
 
-  function renderAll() {
-    const app = $("#app");
-    app.innerHTML = `${renderTop()}${renderHouses()}${renderResultsShell()}`;
+  function updateResultsUI() {
+    $("#totalStake").textContent = fmtBRL(results.totalStake);
+    const roiEl = $("#roi");
+    roiEl.textContent = (results.roi >= 0 ? "+" : "") + results.roi.toFixed(2) + "%";
+    roiEl.className = "text-lg font-bold font-mono " + (results.roi >= 0 ? "text-green-400" : "text-red-400");
 
+    const active = activeHouses();
+    const anyLay = active.some(h => h.lay);
+    const headerCols = anyLay ? "grid-cols-5 gap-3" : "grid-cols-4 gap-3";
+    const header = `
+      <div class="grid text-cyan-100 p-3 border-b border-cyan-500/20 font-bold text-xs whitespace-nowrap min-w-max uppercase tracking-wider ${headerCols}">
+        <div class="min-w-16 text-center">CASA</div>
+        <div class="min-w-16 text-center">ODD</div>
+        <div class="min-w-20 text-center">STAKE</div>
+        ${anyLay ? '<div class="min-w-24 text-center">RESP.</div>' : ''}
+        <div class="min-w-20 text-center">LUCRO</div>
+      </div>
+    `;
+    $("#resultsHeader").outerHTML = header.replace('<div class="grid', '<div id="resultsHeader" class="grid');
+
+    const rowsHTML = active.map((h, idx) => {
+      const oddText = h.freebet ? toFixed2(parseFlex(h.odd) || 0).replace('.', ',')
+                                : toFixed2(h.finalOdd || 0).replace('.', ',');
+      const stakeText = h.stake ? h.stake : "0,00";
+      const profit = results.profits[idx] || 0;
+      const profitPos = profit >= 0;
+      return `
+        <div class="grid p-3 border-b border-cyan-500/10 text-xs whitespace-nowrap min-w-max hover:bg-cyan-500/5 transition-colors duration-200 ${headerCols}">
+          <div class="text-cyan-200 min-w-16 text-center font-medium">Casa ${idx + 1}</div>
+          <div class="text-cyan-100 min-w-16 text-center font-mono">${oddText}</div>
+          <div class="text-cyan-100 min-w-20 text-center font-mono flex items-center justify-center gap-1">R$ ${stakeText}${h.freebet ? '<span class="text-yellow-400 text-[10px]">(Freebet)</span>' : ''}</div>
+          ${anyLay ? `<div class="text-cyan-100 min-w-24 text-center font-mono">${h.lay ? fmtBRL(parseFlex(h.responsibility)||0) : '-'}</div>` : ''}
+          <div class="min-w-20 text-center font-mono font-bold ${profitPos ? 'text-green-400' : 'text-red-400'}">${profitPos ? '' : '-'}${fmtBRL(Math.abs(profit))}</div>
+        </div>
+      `;
+    }).join("");
+    $("#resultsRows").innerHTML = rowsHTML;
+  }
+
+  function updateCardComputed(idx) {
+    const h = houses[idx];
+    const oddEl = document.getElementById(`finalOdd-${idx}`);
+    if (oddEl) oddEl.textContent = toFixed2(h.finalOdd || 0).replace('.', ',');
+    if (h.lay && !(manualOverrides[idx] && manualOverrides[idx].responsibility)) {
+      const rEl = document.getElementById(`responsibility-${idx}`);
+      if (rEl) rEl.value = h.responsibility || "";
+    }
+    if (!(manualOverrides[idx] && manualOverrides[idx].stake)) {
+      const sEl = document.getElementById(`stake-${idx}`);
+      if (sEl) sEl.value = h.stake || "";
+    }
+  }
+  function updateAllHouseUIs(){ activeHouses().forEach((_,i)=>updateCardComputed(i)); }
+
+  // ---------- render ----------
+  function initialRender() {
+    const app = $("#app");
+    app.innerHTML = `${renderTop()}<div id="houses" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4"></div>${renderResultsShell()}`;
+    $("#houses").innerHTML = housesInnerHTML();
+
+    // eventos globais
     $("#numHouses").addEventListener("change", (e) => {
       numHouses = parseInt(e.target.value, 10);
-      $("#houses").outerHTML = renderHouses();
+      // mantém o mesmo nó #houses; troca só innerHTML (não perde listeners delegados)
+      $("#houses").innerHTML = housesInnerHTML();
       calculateResults(activeHouses()); updateAllHouseUIs(); updateResultsUI();
     });
+
     $("#rounding").addEventListener("change", (e) => {
       displayRounding = e.target.value;
       roundingValue = parseFloat(displayRounding.replace(',', '.'));
@@ -373,16 +374,19 @@
       calculateResults(activeHouses()); updateAllHouseUIs(); updateResultsUI();
     });
 
+    // Delegação única no wrapper fixo
     const container = $("#houses");
 
+    // máscara decimal + tratamento de input
     container.addEventListener("input", (e) => {
       const t = e.target;
-      if (t.getAttribute("inputmode") === "decimal") {
+      if (t.getAttribute && t.getAttribute("inputmode") === "decimal") {
         const caret = t.selectionStart;
         const before = t.value;
         t.value = keepNumeric(before);
         try { t.setSelectionRange(caret, caret); } catch {}
       }
+      if (!t.getAttribute) return;
       const action = t.getAttribute("data-action");
       if (!action) return;
       const idx = parseInt(t.getAttribute("data-idx") || "-1", 10);
@@ -404,16 +408,19 @@
       calculateResults(activeHouses()); updateAllHouseUIs(); updateResultsUI();
     });
 
+    // blur -> formatação
     container.addEventListener("blur", (e) => {
       const el = e.target;
-      if (el.getAttribute("inputmode") === "decimal") {
+      if (el.getAttribute && el.getAttribute("inputmode") === "decimal") {
         const v = parseFlex(el.value);
         if (Number.isFinite(v)) el.value = fmtDec(v);
       }
     }, true);
 
+    // checkboxes
     container.addEventListener("change", (e) => {
       const el = e.target;
+      if (!el.getAttribute) return;
       const action = el.getAttribute("data-action");
       if (!action) return;
       const idx = parseInt(el.getAttribute("data-idx") || "-1", 10);
@@ -422,6 +429,7 @@
       if (action === "toggleCommission") {
         const newVal = el.checked ? 0 : null;
         setHouse(idx, { commission: newVal });
+        // re-render só o card (estrutura muda)
         const card = document.getElementById(`card-${idx}`);
         if (card) card.outerHTML = cardHTML(idx, houses[idx]);
       } else if (action === "toggleFreebet") {
@@ -431,8 +439,9 @@
       calculateResults(activeHouses()); updateAllHouseUIs(); updateResultsUI();
     });
 
+    // botões
     container.addEventListener("click", (e) => {
-      const el = e.target.closest("[data-action]");
+      const el = e.target.closest && e.target.closest("[data-action]");
       if (!el) return;
       const action = el.getAttribute("data-action");
       const idx = parseInt(el.getAttribute("data-idx") || "-1", 10);
@@ -449,13 +458,13 @@
       calculateResults(activeHouses()); updateAllHouseUIs(); updateResultsUI();
     });
 
+    // inicial
     calculateResults(activeHouses()); updateAllHouseUIs(); updateResultsUI();
   }
 
   function setHouse(idx, patch, setOverrideKeys = []) {
     const prev = houses[idx];
     const h = { ...prev, ...patch };
-
     const oddVal = parseFlex(h.odd) || 0;
     const incVal = parseFlex(h.increase) || 0;
     h.finalOdd = h.freebet ? Math.max(oddVal - 1, 0) : oddVal * (1 + incVal / 100);
@@ -473,10 +482,14 @@
       setOverrideKeys.forEach(k => manualOverrides[idx][k] = true);
     }
 
-    updateCardComputed(idx);
+    // sincroniza card atual (sem perder digitação)
+    const i = idx;
+    const oddEl = document.getElementById(`finalOdd-${i}`);
+    if (oddEl) oddEl.textContent = toFixed2(h.finalOdd || 0).replace('.', ',');
   }
 
-  renderAll();
+  // boot
+  initialRender();
 })();
 </script>
 

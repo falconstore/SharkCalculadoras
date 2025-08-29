@@ -485,8 +485,6 @@ var sol = solveLinear(M, b);
 var stakes = sol.slice(0, m).map(function(v){ return Math.max(0, v); }); // sem negativos
 var K = sol[m]; // lucro equalizado (não é usado abaixo, mas útil p/ debug)
 
-    }
-
     // Arredondamento
     var step = parseFloat($("round_step").value) || 1; function roundStep(v){ return Math.round(v/step)*step; }
     stakes = stakes.map(roundStep);

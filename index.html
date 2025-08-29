@@ -435,58 +435,43 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
     var liabilities = stakes.map(function(s,i){ return cov.isLay[i] ? (cov.odds[i]-1)*s : 0; });
     var S = s1 + stakes.reduce(function(a,s,idx){ return a + (cov.isLay[idx] ? (cov.odds[idx]-1)*s : s); }, 0);
 
-// === Lucros por cenário (MODO BALANCEADO, igual à calculadora antiga) ===
-// Convenções:
-// - Cenário 1 = Casa Promo vence  → NÃO entra freebet e NÃO contamos ganho do LAY (apenas desconta responsabilidade).
-// - Cenários 2..N = Casa Promo perde → entra freebet extraída (rF).
-// - Para LAY nos cenários 2..N: consideramos ganho = stake_lay * (1 - comissão).
-// - Para BACK nos cenários 2..N: consideramos payout = stake_back * odd_efetiva.
-// Observação: não usamos o fluxo “real” (que somaria ganhos de LAY quando não vence). É o modelo simplificado/balanceado.
+// === Lucros por cenário (MODO BALANCEADO • 2–6 entradas) ===
+// Regras:
+// - Cenário 1 = Casa Promo vence → sem freebet.
+// - Cenários 2..N = Casa Promo perde → soma rF.
+// - BACK vencedor: payout = stake * odd_efetiva; BACK perdedor: perde stake.
+// - LAY vencedor (seleção ocorre): perde responsabilidade; LAY perdedor: ganha stake*(1 - comissão).
 
-function layLiability(idx){ return (cov.odds[idx]-1) * stakes[idx]; }
-function layGain(idx){ return stakes[idx] * (1 - (commFrac[idx]||0)); }
+function layLiability(i){ return (cov.odds[i]-1) * stakes[i]; }
+function layGain(i){ return stakes[i] * (1 - (commFrac[i]||0)); }
 
-// Soma das responsabilidades de TODOS os LAYs
-var totalLayLiab = 0;
+// Totais auxiliares para o cenário 1
+var totalLayLiab = 0, totalBackStakes = 0;
 for (var j=0; j<stakes.length; j++){
   if (cov.isLay[j]) totalLayLiab += layLiability(j);
+  else              totalBackStakes += stakes[j];
 }
 
-// Soma das stakes de TODOS os BACKs (usada para penalizar quando Casa Promo vence)
-var totalBackStakes = 0;
-for (var j=0; j<stakes.length; j++){
-  if (!cov.isLay[j]) totalBackStakes += stakes[j];
-}
+// 1) Casa Promo vence
+var net1 = (s1 * (o1e - 1)) - totalLayLiab - totalBackStakes;
 
-// ---- 1) Cenário "1 vence (Casa Promo)" (sem freebet; modelo balanceado)
-var net1 = (s1 * (o1 - 1))                 // lucro bruto da Casa Promo (odd cheia - 1)
-           - totalLayLiab                  // paga responsabilidades dos LAYs
-           - totalBackStakes;              // perde stakes dos BACKs (se houver)
-           
-// ---- 2) Cenários "k vence" (Casa Promo perde → entra freebet rF)
+// 2) Cada cobertura vence (Casa Promo perde → entra rF)
 var nets = [];
 for (var win=0; win<stakes.length; win++){
-  var netk = -s1;                          // perde a qualificação da Casa Promo
+  var netk = -s1; // perde qualificação da Casa Promo
 
-  if (cov.isLay[win]) {
-    // LAY "vence" (seleção não acontece) no modelo balanceado de 2 cenários: ganhamos o LAY
-    netk += layGain(win);
-    // não cobramos responsabilidades aqui (já estamos no caso em que o LAY dá ganho)
-    // demais LAYs e BACKs não entram no modelo simplificado
-  } else {
-    // BACK do cenário vencedor
-    netk += stakes[win] * eBack[win];      // payout efetivo do BACK
-    // penaliza responsabilidades de todos os LAYs e as stakes dos BACKs não vencedores
-    for (var j=0; j<stakes.length; j++){
-      if (j === win) continue;
-      if (cov.isLay[j]) netk -= layLiability(j);
-      else              netk -= stakes[j];
+  for (var j=0; j<stakes.length; j++){
+    if (cov.isLay[j]){
+      // LAY: se j vence → paga responsabilidade; senão → ganha stake*(1 - comissão)
+      netk += (j === win) ? -layLiability(j) : layGain(j);
+    } else {
+      // BACK: se j vence → payout; senão → perde stake
+      netk += (j === win) ? (stakes[j] * eBack[j]) : -stakes[j];
     }
   }
 
-  // Freebet extraída porque a Casa Promo perdeu
+  // Freebet extraída
   netk += rF;
-
   nets[win] = netk;
 }
 

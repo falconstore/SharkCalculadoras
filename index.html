@@ -409,22 +409,82 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
     var r = rPerc/100; var rF = r*F;
     var A = s1*o1e - rF; // alvo
 
-    // Stakes coberturas (back/lay)
-    var stakes = [], eBack = [], commFrac = [], oddsOrig = cov.odds.slice();
-    for(var i=0;i<cov.odds.length;i++){
-      var L = cov.odds[i];
-      var cfrac = (Number.isFinite(cov.comm[i]) && cov.comm[i]>0) ? cov.comm[i]/100 : 0; commFrac[i]=cfrac;
-      if(cov.isLay[i]){
-        var denom = L-1; if(!(denom>0)){ showStatus('warn','Odd para LAY deve ser >1,00.'); return }
-        // Conversão LAY -> back-equivalente:
-        // odd_eff_lay = 1 + (1 - c)/(L - 1) = (L - c)/(L - 1)
-        var eLay = 1 + (1 - cfrac)/denom; // para tooltip e cálculo equivalente
-        var equivStake = A / eLay;        // stake equivalente (medida em RESPONSABILIDADE)
-        stakes[i] = equivStake / denom;   // stake real de LAY
-        eBack[i] = eLay;                  // guardar odd efetiva equivalente para tooltip
-      }else{
-        var e = effOdd(L, cov.comm[i]); eBack[i]=e; stakes[i]= A/e; // back usa odd efetiva
-      }
+// ===== Stakes coberturas (BALANCEADO 2–6 via sistema linear) =====
+var oddsOrig = cov.odds.slice();
+var commFrac = cov.comm.map(function(c){ return (Number.isFinite(c)&&c>0)? c/100 : 0; });
+
+// Odd “efetiva” só para tooltip:
+//  - BACK: odd efetiva com comissão
+//  - LAY:  eLay = 1 + (1 - comissão)/(L-1)
+var eBack = cov.odds.map(function(L, i){
+  if (cov.isLay[i]) {
+    var cfrac = commFrac[i], denom = (L - 1);
+    return 1 + (1 - cfrac) / denom;
+  } else {
+    return effOdd(L, cov.comm[i]);
+  }
+});
+
+// Monta sistema M * u = b, com u = [stakes..., K]
+// Eq.0  -> cenário 1 (Casa Promo vence)
+// Eq.k  -> cenário (k) vence (k = 1..m)
+var m = cov.odds.length;
+var N = m + 1;                 // (stakes m) + (K)
+var M = new Array(N).fill(0).map(function(){ return new Array(N).fill(0); });
+var b = new Array(N).fill(0);
+
+// Eq.0: Casa Promo vence → K = s1*(o1e-1) + Σ a1j*xj
+for (var j=0; j<m; j++){
+  M[0][j] = cov.isLay[j] ? -(cov.odds[j]-1) : -1;
+}
+M[0][m] = -1;                          // -K
+b[0] = - s1*(o1e - 1);
+
+// Eq.(win+1): cenário win vence → K = -s1 + rF + Σ a_win,j*xj
+for (var win=0; win<m; win++){
+  for (var j=0; j<m; j++){
+    if (cov.isLay[j]) {
+      M[win+1][j] = (j === win) ? -(cov.odds[j]-1) : (1 - commFrac[j]);
+    } else {
+      M[win+1][j] = (j === win) ? (/* payout BACK vencedor */ eBack[j]) : -1;
+    }
+  }
+  M[win+1][m] = -1;                   // -K
+  b[win+1] = -(-s1 + rF);
+}
+
+// Resolve por eliminação de Gauss
+function solveLinear(A, rhs){
+  var n = rhs.length;
+  // matriz aumentada
+  for (var i=0;i<n;i++) A[i] = A[i].concat([rhs[i]]);
+  for (var col=0, row=0; col<n && row<n; col++, row++){
+    // pivô
+    var iMax=row;
+    for (var i=row+1;i<n;i++) if (Math.abs(A[i][col]) > Math.abs(A[iMax][col])) iMax=i;
+    var piv = A[iMax][col];
+    if (Math.abs(piv) < 1e-9) continue;
+    // troca
+    var tmp=A[row]; A[row]=A[iMax]; A[iMax]=tmp;
+    // normaliza
+    for (var j=col;j<=n;j++) A[row][j] /= piv;
+    // elimina
+    for (var i=0;i<n;i++){
+      if (i===row) continue;
+      var f = A[i][col];
+      if (Math.abs(f) < 1e-12) continue;
+      for (var j=col;j<=n;j++) A[i][j] -= f*A[row][j];
+    }
+  }
+  var x = new Array(n).fill(0);
+  for (var i=0;i<n;i++) x[i] = A[i][n];
+  return x;
+}
+
+var sol = solveLinear(M, b);
+var stakes = sol.slice(0, m).map(function(v){ return Math.max(0, v); }); // sem negativos
+var K = sol[m]; // lucro equalizado (não é usado abaixo, mas útil p/ debug)
+
     }
 
     // Arredondamento
